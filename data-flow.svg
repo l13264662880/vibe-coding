@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" width="1000" height="620" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="620" fill="#111827"/>
+
+  <text x="30" y="40" fill="#f9fafb" font-size="21" font-weight="700">数据流图 ｜ 强制排序待办小工具（Day 5）</text>
+  <text x="30" y="66" fill="#9ca3af" font-size="13">数据从哪来、到哪去 —— 只有两个家：用户的手（产生）和 localStorage（保管）</text>
+
+  <!-- 用户 -->
+  <rect x="40" y="255" width="150" height="86" rx="10" fill="#1f2937" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="115" y="288" fill="#f9fafb" font-size="15" font-weight="600" text-anchor="middle">用户</text>
+  <text x="115" y="310" fill="#9ca3af" font-size="11.5" text-anchor="middle">键盘输入 / 拖拽</text>
+  <text x="115" y="327" fill="#9ca3af" font-size="11.5" text-anchor="middle">点击 / 编辑</text>
+
+  <!-- 前端页面 -->
+  <rect x="255" y="150" width="250" height="300" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="380" y="182" fill="#60a5fa" font-size="15" font-weight="700" text-anchor="middle">前端页面（网页）</text>
+  <text x="380" y="202" fill="#9ca3af" font-size="11" text-anchor="middle">HTML + CSS + 原生 JS</text>
+
+  <rect x="278" y="220" width="204" height="52" rx="8" fill="#111827" stroke="#475569"/>
+  <text x="380" y="241" fill="#e5e7eb" font-size="12.5" font-weight="600" text-anchor="middle">① 接住操作</text>
+  <text x="380" y="259" fill="#94a3b8" font-size="11" text-anchor="middle">回车 / 拖拽 / 点击 → 改数据</text>
+
+  <rect x="278" y="286" width="204" height="52" rx="8" fill="#111827" stroke="#475569"/>
+  <text x="380" y="307" fill="#e5e7eb" font-size="12.5" font-weight="600" text-anchor="middle">② 存回去</text>
+  <text x="380" y="325" fill="#94a3b8" font-size="11" text-anchor="middle">写下整个任务列表</text>
+
+  <rect x="278" y="352" width="204" height="52" rx="8" fill="#111827" stroke="#475569"/>
+  <text x="380" y="373" fill="#e5e7eb" font-size="12.5" font-weight="600" text-anchor="middle">③ 重画页面</text>
+  <text x="380" y="391" fill="#94a3b8" font-size="11" text-anchor="middle">高亮「第一件事」</text>
+
+  <!-- 存储 -->
+  <rect x="640" y="230" width="220" height="140" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="750" y="264" fill="#34d399" font-size="15" font-weight="700" text-anchor="middle">浏览器 localStorage</text>
+  <text x="750" y="286" fill="#9ca3af" font-size="11" text-anchor="middle">顶替数据库的角色</text>
+  <rect x="662" y="302" width="176" height="48" rx="8" fill="#111827" stroke="#475569"/>
+  <text x="750" y="322" fill="#e5e7eb" font-size="12" text-anchor="middle">任务文字 · 顺序 · 完成状态</text>
+  <text x="750" y="340" fill="#94a3b8" font-size="10.5" text-anchor="middle">关掉浏览器也不丢</text>
+
+  <!-- 无后端标识 -->
+  <rect x="640" y="420" width="220" height="60" rx="10" fill="#111827" stroke="#4b5563" stroke-dasharray="5 4"/>
+  <text x="750" y="444" fill="#9ca3af" font-size="12.5" text-anchor="middle">后端 / 服务器 / 数据库</text>
+  <text x="750" y="464" fill="#6b7280" font-size="11.5" text-anchor="middle">本阶段：不存在（PRD 4.1 已砍）</text>
+
+  <!-- 箭头：用户 -> 前端 -->
+  <line x1="190" y1="298" x2="252" y2="298" stroke="#6b7280" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="221" y="288" fill="#9ca3af" font-size="10.5" text-anchor="middle">操作</text>
+
+  <!-- 箭头：前端 -> 存储（写） -->
+  <path d="M 482 250 L 636 250" stroke="#10b981" stroke-width="1.8" fill="none" marker-end="url(#arrowGreen)"/>
+  <text x="559" y="240" fill="#34d399" font-size="11" text-anchor="middle">写（保存）</text>
+
+  <!-- 箭头：存储 -> 前端（读） -->
+  <path d="M 636 320 L 482 320" stroke="#3b82f6" stroke-width="1.8" fill="none" marker-end="url(#arrowBlue)"/>
+  <text x="559" y="355" fill="#60a5fa" font-size="11" text-anchor="middle">读（打开页面时）</text>
+
+  <!-- 底部两条流向说明 -->
+  <rect x="40" y="480" width="400" height="110" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.4"/>
+  <text x="60" y="506" fill="#fbbf24" font-size="13" font-weight="700">流向一：添加任务</text>
+  <text x="60" y="530" fill="#d1d5db" font-size="11.5">打字 → 回车 → 生成任务 → 追加到末尾</text>
+  <text x="60" y="551" fill="#d1d5db" font-size="11.5">→ 写进 localStorage → 重画页面</text>
+  <text x="60" y="575" fill="#94a3b8" font-size="11">新任务永远排最后，位置就是优先级</text>
+
+  <rect x="470" y="480" width="390" height="110" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.4"/>
+  <text x="490" y="506" fill="#fbbf24" font-size="13" font-weight="700">流向二：打开 / 刷新页面</text>
+  <text x="490" y="530" fill="#d1d5db" font-size="11.5">打开页面 → 从 localStorage 读回</text>
+  <text x="490" y="551" fill="#d1d5db" font-size="11.5">→ 按原顺序渲染 → 高亮第 1 位</text>
+  <text x="490" y="575" fill="#94a3b8" font-size="11">空列表时显示「先加一件事」，不报错</text>
+
+  <text x="900" y="612" fill="#4b5563" font-size="10.5" text-anchor="end">vibe-coding · Day 5 · 网页形态</text>
+</svg>
