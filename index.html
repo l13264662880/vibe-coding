@@ -3,11 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>vibe-coding</title>
+  <meta name="theme-color" content="#e6ece5" />
+  <title>先做哪件 · 强制排序待办</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%239c3d34'/%3E%3Ctext x='50' y='52' font-size='62' text-anchor='middle' dominant-baseline='central' fill='%23fbfdfa' font-family='SimSun,serif'%3E%E5%85%88%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>vibe-coding</h1>
-  <p>这里是项目占位页（Day 2 创建）。</p>
-  <p>网站正式功能（MVP）将在 Day 7 开始开发。</p>
+  <main class="app">
+
+    <header class="app-header">
+      <h1>先做哪件</h1>
+      <p class="app-sub">知所先后，则近道矣</p>
+      <!-- 朱砂印：全页唯一一处朱红。纯装饰，不进无障碍树 -->
+      <span class="seal" aria-hidden="true">先</span>
+    </header>
+
+    <!-- 第一件事：全局唯一的高亮区（PRD 验收标准第 3、4 条） -->
+    <section class="focus">
+      <span class="focus-label">现在最该做的</span>
+      <p class="focus-text" id="focusText">复习高数第三章</p>
+    </section>
+
+    <!-- 添加任务：输入一句话，回车加到队尾 -->
+    <form class="add-form" id="addForm">
+      <input
+        type="text"
+        id="taskInput"
+        placeholder="要做点什么？回车加到队尾"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </form>
+
+    <!-- 任务列表：内容由 app.js 按 localStorage 里的真实数据渲染 -->
+    <ul class="task-list" id="taskList"></ul>
+
+    <!-- 列表为空时显示（由 JS 控制显示与隐藏） -->
+    <p class="empty-hint" id="emptyHint" hidden>还没有任务。在上面输入一行字，按回车。</p>
+
+    <!-- 删除任务后出现的撤销入口（由 JS 控制） -->
+    <div class="undo-bar" id="undoBar" hidden>
+      <span id="undoText">已删除一条任务</span>
+      <button type="button" id="undoBtn">撤销</button>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>

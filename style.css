@@ -1,0 +1,436 @@
+/* style.css —— 页面外观
+   Day 7：瓷影（古风）。
+
+   这一版在「陶土·宁静」之上再走一步：把骨架换成古法。
+   宁静的底子一点没丢（见下面「保留」），只是换了字体和材质。
+
+   三件事决定了「古风」成不成立，其余都是细节：
+     一、字体换成宋体 —— 这是最关键的一步。中文一换衬线，气质立刻变。
+     二、墨色代黑 —— 不用纯黑，用墨绿 #2a332c；底色用瓷灰 #e6ece5，冷而不脏。
+     三、朱砂只出现一次 —— 页头那枚方印。朱砂比青瓷「重」，满页跑就从「静」变「噪」。
+
+   三条纪律（自己给自己定的，避免改出问题）：
+     · 绝不做竖排。待办列表竖排会直接毁掉可用性（拖拽、扫读全废）。
+     · 宋体最小字号提到 12px。SimSun 在 11px 以下会点阵发虚。
+     · 字重只用 400。宋体没有真 500/600，浏览器合成出来的假粗会脏。
+       （原来用 500 的地方一律落回 400，靠字号和颜色做层级。）
+
+   保留（上一轮「宁静」的成果，不动）
+     · 无渐变、无毛玻璃、无发光、无彩色阴影 —— 纯色底，页面背后没有东西在动
+     · 只留 3 个功能型过渡：新增淡入 / 落位闪一层色 / 删除柔和退场，300ms 平稳缓出
+     · 层级靠对比度 + 留白 + 一条 3px 竖线，不靠光
+
+   竹影（背景，第 5 轮加）
+     · 青瓷配竹，是这一版古风的收尾一笔。两侧各一枝「疏影」，半枝斜出
+     · 三条纪律：极淡、纯静态、只在留白处 —— 一动一深，「宁静」就破了
+     · 同一张 bamboo.svg，右侧靠 scaleX(-1) 镜像复用，省一半代码
+     · 只长在内容区之外；窗口不足 990px 时整体不出现
+
+   两条约束一直没变：
+   1. PRD 验收标准第 4 条：页面上有且只有一个「第一件事」突出显示区域
+   2. research.md 第 5 节：界面保持聚焦，不做信息堆砌
+
+   配色已逐个算过 WCAG 对比度（瓷灰底 #e6ece5 / 笺纸卡 #fbfdfa）：
+     墨 #2a332c 10.9:1 ｜ 次墨 #5f6a62 4.7:1 ｜ 占位 #6c766f 4.6:1
+     深青瓷 #4d6a5c 4.95:1（文字可用）｜ 白字压朱砂印 6.6:1 ｜ 朱色 #9c4038 6.4:1
+*/
+
+:root {
+  /* 瓷与笺 */
+  --bg: #e6ece5;
+  --card: #fbfdfa;
+  --card-hover: #ffffff;
+  --card-sunken: #eef2ed;
+
+  /* 描边：冷灰绿。刻意不到高对比 —— 边框一重，宁静就没了 */
+  --line: rgba(60, 78, 68, .14);
+  --line-strong: rgba(60, 78, 68, .26);
+
+  /* 墨 */
+  --text: #2a332c;
+  --text-dim: #5f6a62;
+  --text-faint: #6c766f; /* 只给占位符和细序号用 */
+
+  /* 青瓷。--accent 是能上文字的深档，--accent-line 只用于竖线和填充 */
+  --accent: #4d6a5c;
+  --accent-line: #5f7d6e;
+  --accent-soft: rgba(77, 106, 92, .10);
+
+  /* 朱砂：全页唯一一处朱红，只给页头那枚印章。另外兼任「删除」的危险色 */
+  --seal: #9c3d34;
+  --danger: #9c4038;
+  --ok: #4d6a5c;
+
+  /* 宋体为主。中文衬线是这一版古风的全部依据 */
+  --serif: "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif;
+  /* 行内符号（✓ ✎ ✕）走这套，免得被宋体拉得笔画散开 */
+  --symbol: "Segoe UI Symbol", "Segoe UI", system-ui, sans-serif;
+
+  --radius: 6px;   /* 比方角柔和、比圆角方正 */
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --dur: 300ms;
+
+  /* 阴影也用冷灰绿，否则在瓷灰底上会显脏 */
+  --lift: 0 1px 2px rgba(60, 78, 68, .05), 0 6px 16px rgba(60, 78, 68, .07);
+  --lift-sm: 0 1px 2px rgba(60, 78, 68, .04);
+}
+
+* { box-sizing: border-box; }
+
+html { color-scheme: light; }
+
+::selection { background: rgba(95, 125, 110, .22); }
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(60, 78, 68, .18);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(60, 78, 68, .3); background-clip: content-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 64px 16px 120px;
+  background: var(--bg); /* 纯色底：页面背后不再有任何东西在动 */
+  color: var(--text);
+  /* 宋体行高要松一点才透气；字距微放，读起来更像刻印而不是屏幕 */
+  font: 400 16px/1.8 var(--serif);
+  letter-spacing: .02em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  /* 抬到竹影与雾带之上：竹子在两侧留白处，卡片永远盖在它们上面，文字区不受影响 */
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------- 竹影 + 底部雾带（背景装饰） ----------
+   青瓷配竹，是这一版古风收尾的一笔。
+   第 6 轮重画：原先直竿、等宽、叶两两成对，在屏幕上读起来像芦苇杆。
+   现在改成国画竹的写法 —— 竿带弧度、上细下粗（5.8px -> 2.7px）；
+   叶不再直接挂在竿上，而是先从节上伸一根细枝、由枝头散出五片，成簇下垂。
+   三条纪律不变：极淡、纯静态、只在留白处 —— 竹子一动，「宁静」就破了。
+   两侧是同一张 bamboo.svg，右侧用 scaleX(-1) 镜像，省一半代码。
+   浓度：竿 24% / 叶 30%，在瓷灰底上混合成 #c1ccc4 / #b8c5bc。
+   有效内容从 x≈44 起（最长那几片叶的叶尖），视口 1080px 往上即完整可见。 */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  width: 220px;
+  height: 600px;
+  max-height: calc(100vh - 120px); /* 窗口矮时整体缩小，免得叶尖被裁掉只剩光竿；
+                                      再减 120px，给底部雾带留出空间（Day 7 实测修正） */
+  background: url("bamboo.svg") no-repeat center bottom;
+  background-size: contain;
+  pointer-events: none;   /* 纯装饰，不吃鼠标事件 */
+  z-index: 0;
+  display: none;          /* 默认不显示，够宽才开（见文末 media） */
+}
+body::before { left: calc(50% - 560px); }
+body::after  { right: calc(50% - 560px); transform: scaleX(-1); }
+
+/* 底部一层极淡的远景雾带（第 7 轮加）。
+   用户反馈「页面下半空」，雾带负责把视线从内容区往下轻轻托住，
+   而且不引入任何新形状 —— 只有一道自下而上、逐渐消失的青灰色。
+   层级压在竹根之上（1 > 竹子的 0）：竹子的下半截因此没入雾里，
+   不会在屏幕最底端被硬生生切断。全宽显示，用 fixed 钉在视口底部，
+   不参与滚动布局，所以任务列表再长也不会被它压住。 */
+html::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 190px;
+  background: linear-gradient(to top,
+    rgba(77, 106, 92, .13) 0,
+    rgba(77, 106, 92, .055) 42%,
+    rgba(77, 106, 92, 0) 100%);
+  pointer-events: none;
+  z-index: 1;             /* 在竹影之上、内容之下 */
+}
+
+/* ---------- 页头 ---------- */
+.app-header { position: relative; margin-bottom: 32px; }
+.app-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 400;      /* 宋体没有真粗，靠字号和字距撑气势即可 */
+  letter-spacing: .12em;
+  color: var(--text);
+}
+/* 副标题是一句引文，字距再放开些，读起来像题跋 */
+.app-sub {
+  margin: 10px 0 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  letter-spacing: .12em;
+}
+
+/* 朱砂印：全页唯一一处朱红，当「点睛」用。取自产品名的第一个字。 */
+.seal {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--card);       /* 白文印：朱底白字，6.6:1 */
+  background: var(--seal);
+  border-radius: 3px;
+  user-select: none;
+}
+
+/* ---------- 第一件事（全局唯一的高亮区，视觉焦点） ----------
+   层级做法：一条 3px 青瓷竖线 + 更大的留白 + 略深的阴影。
+   安静，但你一眼还是知道该看哪里。 */
+.focus {
+  margin-bottom: 26px;
+  padding: 28px 28px 28px 26px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-line); /* 全页唯一的那条彩线 */
+  box-shadow: var(--lift);
+}
+
+.focus-label {
+  display: block;
+  font-size: 12px;            /* 宋体的下限：再小就点阵发虚了 */
+  font-weight: 400;
+  letter-spacing: .2em;       /* 像古籍的旁注 */
+  color: var(--accent);
+}
+.focus-text {
+  margin: 12px 0 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: .06em;
+  word-break: break-word;
+  color: var(--text);
+}
+/* 空列表 / 没有未完成任务时的引导文案，不空白、不报错 */
+.focus-text.is-empty {
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+/* ---------- 添加任务 ---------- */
+.add-form { margin-bottom: 22px; }
+#taskInput {
+  width: 100%;
+  padding: 15px 18px;
+  font: 400 16px/1.8 var(--serif);
+  letter-spacing: .02em;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--lift-sm);
+  outline: none;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+#taskInput::placeholder { color: var(--text-faint); }
+#taskInput:focus {
+  border-color: rgba(77, 106, 92, .5);
+  box-shadow: 0 0 0 3px var(--accent-soft); /* 无障碍需要的焦点环，但做得很淡 */
+}
+
+/* ---------- 任务列表 ---------- */
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--lift-sm);
+  cursor: grab;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.task:hover {
+  background: var(--card-hover);
+  border-color: var(--line-strong);
+}
+.task:active { cursor: grabbing; }
+
+/* 位置就是优先级。序号用汉字（一、二、三），且不加圆形底色 ——
+   裸字更像古籍的条目编号；层级靠墨色深浅，不靠填充。 */
+.task-index {
+  flex: 0 0 30px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-faint);
+  transition: color var(--dur) var(--ease);
+}
+.task.is-first .task-index {
+  font-size: 15px;
+  color: var(--accent);   /* 第 1 名：淡墨 → 深青瓷，对比足够，又不喧哗 */
+}
+
+.task-text { flex: 1 1 auto; word-break: break-word; letter-spacing: .02em; }
+
+.task-actions { display: flex; gap: 2px; opacity: .45; transition: opacity var(--dur) var(--ease); }
+.task:hover .task-actions { opacity: 1; }
+
+.task-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-family: var(--symbol);  /* 符号不跟着宋体走，否则笔画会散 */
+  font-size: 14px;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.task-btn:hover { background: var(--card-sunken); color: var(--text); }
+.task-btn.js-done:hover { background: rgba(77, 106, 92, .12); color: var(--ok); }
+.task-btn.js-del:hover { background: rgba(156, 64, 56, .10); color: var(--danger); }
+.task-btn.js-save { color: var(--accent); }
+.task-btn.js-save:hover { background: var(--accent-soft); color: var(--accent); }
+
+/* 已完成：划线显示，沉到列表底部（沉底由 JS 排序实现） */
+.task.is-done { opacity: .62; cursor: default; }
+.task.is-done .task-text { text-decoration: line-through; color: var(--text-dim); }
+
+/* 编辑态：整行文字换成输入框 */
+.task.is-editing { cursor: text; }
+.task-edit-input {
+  width: 100%;
+  padding: 5px 10px;
+  font: 400 16px/1.8 var(--serif);
+  letter-spacing: .02em;
+  color: var(--text);
+  background: var(--card-sunken);
+  border: 1px solid rgba(77, 106, 92, .5);
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 拖拽时的落点提示：一条青瓷细线，不用青光、不发光 */
+.task.is-dragging { opacity: .45; cursor: grabbing; }
+.task.drop-before { box-shadow: 0 -2px 0 0 var(--accent-line); }
+.task.drop-after { box-shadow: 0 2px 0 0 var(--accent-line); }
+
+/* 三个功能性过渡（不是表演）：新增淡入、落位提示、删除退场。
+   统一 300ms 平稳缓出，动作「软」下来 —— 全删掉的话界面只会变「跳」。 */
+.task.is-new { animation: task-in var(--dur) var(--ease); }
+.task.just-dropped { animation: drop-note var(--dur) var(--ease); }
+.task.is-leaving { animation: task-out 280ms ease-in forwards; pointer-events: none; }
+
+@keyframes task-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes drop-note {
+  0%, 100% { background: var(--card); }
+  45% { background: #eef4ef; } /* 只闪一层极淡的青瓷，不位移、不缩放 */
+}
+@keyframes task-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+/* ---------- 空列表引导 ---------- */
+.empty-hint {
+  margin: 0;
+  padding: 34px 16px;
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: .06em;
+  color: var(--text-dim);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+/* ---------- 撤销删除（删除后出现，刷新即失效） ---------- */
+.undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 11px 15px 11px 19px;
+  font-size: 14px;
+  letter-spacing: .04em;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 4px rgba(60, 78, 68, .06), 0 10px 28px rgba(60, 78, 68, .14);
+  z-index: 5;
+}
+.undo-bar[hidden] { display: none; }
+.undo-bar button {
+  font: 400 14px/1 var(--serif);
+  letter-spacing: .08em;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease);
+}
+.undo-bar button:hover { color: var(--text); }
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 560px) {
+  body { padding: 38px 14px 110px; }
+  .app-header h1 { font-size: 24px; letter-spacing: .08em; }
+  .focus { padding: 24px 20px 24px 18px; }
+  .focus-text { font-size: 21px; }
+  .task-actions { opacity: 1; }
+  .seal { width: 26px; height: 26px; font-size: 13px; }
+}
+
+/* 竹影只在够宽时出现。重画后有效内容从 x≈44 起（最长那几片叶的叶尖），
+   视口 1080px 往上就完整可见；990px 是下限，左侧只是叶尖被探出屏幕一点。
+   注意：竹子的右边缘与内容区左边缘始终留 20px（left 用 calc(50% - 560px) 跟随
+   内容区），所以任何宽度下都不会压到文字，窄的时候只是竹子的左侧探出屏幕外。
+   底部雾带是全宽的，不受这个阈值限制，窄屏照样有。 */
+@media (min-width: 990px) {
+  body::before,
+  body::after { display: block; }
+}
+
+/* ---------- 尊重「减少动态效果」的系统设置 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
