@@ -3,8 +3,9 @@
 
   <defs>
     <path id="leaf" d="M0 0 C 18 -5 48 -13 78 -25 C 48 -6 18 2 0 0 Z"/>
+
     <g id="bamboo">
-      <g fill="none" stroke="#4d6a5c" stroke-linecap="round" opacity=".24">
+      <g fill="none" stroke="#d99a2b" stroke-linecap="round" opacity=".24">
         <path d="M 176 597 L 171 567" stroke-width="5.8"/>
         <path d="M 171 557 L 166 527" stroke-width="5.6"/>
         <path d="M 166 517 L 161 487" stroke-width="5.4"/>
@@ -22,7 +23,7 @@
         <path d="M 138 37 L 140.5 7" stroke-width="2.7"/>
       </g>
 
-      <g fill="none" stroke="#4d6a5c" stroke-width="2.2" stroke-linecap="round" opacity=".24">
+      <g fill="none" stroke="#d99a2b" stroke-width="2.2" stroke-linecap="round" opacity=".24">
         <path d="M 165.5 562 L 176.5 562"/>
         <path d="M 160.5 522 L 171.5 522"/>
         <path d="M 155.5 482 L 166.5 482"/>
@@ -39,73 +40,81 @@
         <path d="M 132.5 42 L 143.5 42"/>
       </g>
 
-      <g fill="none" stroke="#4d6a5c" stroke-width="1.7" stroke-linecap="round" opacity=".26">
-        <path d="M 170 562 L 135 548"/>
-        <path d="M 155.5 442 L 123.5 451"/>
-        <path d="M 144 322 L 112 331"/>
-        <path d="M 136.5 202 L 104.5 211"/>
-        <path d="M 135.5 82 L 103.5 91"/>
-        <path d="M 166 522 L 176 528"/>
-        <path d="M 148.5 362 L 158 368"/>
+      <g fill="none" stroke="#d99a2b" stroke-width="1.7" stroke-linecap="round" opacity=".26">
+        <path d="M 171 562 L 130 538"/>
+        <path d="M 161 522 L 190 502"/>
+        <path d="M 155.5 442 L 118 422"/>
+        <path d="M 147 402 L 172 388"/>
+        <path d="M 144 322 L 108 302"/>
+        <path d="M 138.5 282 L 164 266"/>
+        <path d="M 136.5 202 L 102 184"/>
+        <path d="M 136.5 77 L 150 126"/>
+        <path d="M 134.5 162 L 158 148"/>
       </g>
 
-      <g fill="#4d6a5c" opacity=".30">
-        <use href="#leaf" transform="translate(135,548) rotate(-28)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-52) scale(.92)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-76) scale(1.06)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-100) scale(.88)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-124) scale(.98)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-148) scale(1.04)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-172) scale(.9)"/>
-        <use href="#leaf" transform="translate(135,548) rotate(-196) scale(.96)"/>
+      <g fill="#d99a2b" opacity=".30">
+        <use href="#leaf" transform="translate(141,556) rotate(-124) scale(.86)"/>
+        <use href="#leaf" transform="translate(137,552) rotate(-144) scale(.92)"/>
+        <use href="#leaf" transform="translate(134,548) rotate(-163) scale(.8)"/>
+        <use href="#leaf" transform="translate(131,543) rotate(-181) scale(.94)"/>
+        <use href="#leaf" transform="translate(128,538) rotate(-198) scale(.84)"/>
 
-        <use href="#leaf" transform="translate(123.5,451) rotate(-28) scale(.94)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-52) scale(1.04)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-76) scale(.9)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-100)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-124) scale(.92)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-148) scale(1.02)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-172) scale(.88)"/>
-        <use href="#leaf" transform="translate(123.5,451) rotate(-196) scale(1.06)"/>
+        <use href="#leaf" transform="translate(181,529) rotate(-46) scale(.88)"/>
+        <use href="#leaf" transform="translate(185,524) rotate(-63) scale(.94)"/>
+        <use href="#leaf" transform="translate(188,519) rotate(-80) scale(.82)"/>
+        <use href="#leaf" transform="translate(190,513) rotate(-96) scale(.9)"/>
+        <use href="#leaf" transform="translate(191,507) rotate(-113) scale(.86)"/>
 
-        <use href="#leaf" transform="translate(112,331) rotate(-28) scale(1.02)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-52) scale(.9)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-76) scale(.98)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-100) scale(1.06)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-124) scale(.88)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-148)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-172) scale(.94)"/>
-        <use href="#leaf" transform="translate(112,331) rotate(-196) scale(1.04)"/>
+        <use href="#leaf" transform="translate(129,449) rotate(-119) scale(.9)"/>
+        <use href="#leaf" transform="translate(125,444) rotate(-139) scale(.84)"/>
+        <use href="#leaf" transform="translate(121,439) rotate(-158) scale(.92)"/>
+        <use href="#leaf" transform="translate(118,434) rotate(-176) scale(.86)"/>
+        <use href="#leaf" transform="translate(115,428) rotate(-194) scale(.9)"/>
 
-        <use href="#leaf" transform="translate(104.5,211) rotate(-28) scale(.96)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-52)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-76) scale(1.04)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-100) scale(.9)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-124) scale(1.02)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-148) scale(.92)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-172)"/>
-        <use href="#leaf" transform="translate(104.5,211) rotate(-196) scale(.88)"/>
+        <use href="#leaf" transform="translate(165,415) rotate(-49) scale(.86)"/>
+        <use href="#leaf" transform="translate(168,410) rotate(-66) scale(.92)"/>
+        <use href="#leaf" transform="translate(170,405) rotate(-83) scale(.84)"/>
+        <use href="#leaf" transform="translate(172,399) rotate(-100) scale(.9)"/>
+        <use href="#leaf" transform="translate(173,393) rotate(-117) scale(.88)"/>
 
-        <use href="#leaf" transform="translate(103.5,91) rotate(-28) scale(1.04)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-52) scale(.94)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-76)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-100) scale(.98)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-124) scale(.9)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-148) scale(1.06)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-172) scale(.92)"/>
-        <use href="#leaf" transform="translate(103.5,91) rotate(-196) scale(1.02)"/>
+        <use href="#leaf" transform="translate(119,329) rotate(-117) scale(.88)"/>
+        <use href="#leaf" transform="translate(115,324) rotate(-137) scale(.92)"/>
+        <use href="#leaf" transform="translate(111,319) rotate(-156) scale(.84)"/>
+        <use href="#leaf" transform="translate(108,314) rotate(-175) scale(.9)"/>
+        <use href="#leaf" transform="translate(105,308) rotate(-193) scale(.86)"/>
 
-        <use href="#leaf" transform="translate(176,528) rotate(-58) scale(.42)"/>
-        <use href="#leaf" transform="translate(176,528) rotate(-22) scale(.46)"/>
-        <use href="#leaf" transform="translate(176,528) rotate(14) scale(.4)"/>
+        <use href="#leaf" transform="translate(157,293) rotate(-47) scale(.9)"/>
+        <use href="#leaf" transform="translate(160,288) rotate(-64) scale(.84)"/>
+        <use href="#leaf" transform="translate(162,283) rotate(-81) scale(.92)"/>
+        <use href="#leaf" transform="translate(164,277) rotate(-98) scale(.86)"/>
+        <use href="#leaf" transform="translate(165,271) rotate(-115) scale(.88)"/>
 
-        <use href="#leaf" transform="translate(158,368) rotate(-58) scale(.44)"/>
-        <use href="#leaf" transform="translate(158,368) rotate(-22) scale(.4)"/>
-        <use href="#leaf" transform="translate(158,368) rotate(14) scale(.46)"/>
+        <use href="#leaf" transform="translate(113,211) rotate(-115) scale(.9)"/>
+        <use href="#leaf" transform="translate(109,206) rotate(-135) scale(.84)"/>
+        <use href="#leaf" transform="translate(105,201) rotate(-155) scale(.92)"/>
+        <use href="#leaf" transform="translate(102,196) rotate(-174) scale(.86)"/>
+        <use href="#leaf" transform="translate(99,190) rotate(-192) scale(.9)"/>
+
+        <use href="#leaf" transform="translate(151,175) rotate(-45) scale(.88)"/>
+        <use href="#leaf" transform="translate(153,170) rotate(-62) scale(.92)"/>
+        <use href="#leaf" transform="translate(155,165) rotate(-79) scale(.84)"/>
+        <use href="#leaf" transform="translate(157,159) rotate(-96) scale(.9)"/>
+        <use href="#leaf" transform="translate(158,153) rotate(-113) scale(.86)"/>
+
+        <use href="#leaf" transform="translate(117,94) rotate(-113) scale(.88)"/>
+        <use href="#leaf" transform="translate(113,89) rotate(-133) scale(.92)"/>
+        <use href="#leaf" transform="translate(109,84) rotate(-153) scale(.84)"/>
+        <use href="#leaf" transform="translate(106,78) rotate(-172) scale(.9)"/>
+        <use href="#leaf" transform="translate(104,72) rotate(-190) scale(.86)"/>
+
+        <use href="#leaf" transform="translate(155,123) rotate(-43) scale(.9)"/>
+        <use href="#leaf" transform="translate(157,118) rotate(-60) scale(.84)"/>
+        <use href="#leaf" transform="translate(158,112) rotate(-77) scale(.92)"/>
+        <use href="#leaf" transform="translate(159,106) rotate(-94) scale(.86)"/>
+        <use href="#leaf" transform="translate(160,100) rotate(-111) scale(.88)"/>
       </g>
     </g>
   </defs>
 
-  <use href="#bamboo" transform="translate(-12,4)" opacity=".38"/>
   <use href="#bamboo"/>
 </svg>

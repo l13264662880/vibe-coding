@@ -33,10 +33,62 @@
         autocomplete="off"
         spellcheck="false"
       />
+      <!-- AI 录入的实时识别提示：输入带「截止/时长」的话时显示，由 app.js 控制 -->
+      <p class="parse-hint" id="parseHint" hidden></p>
     </form>
 
-    <!-- 任务列表：内容由 app.js 按 localStorage 里的真实数据渲染 -->
+    <!-- 智能排序：工具按截止时间给初始顺序当起点，用户仍可拖拽微调（预排序，不代排） -->
+    <div class="sort-bar">
+      <button type="button" class="sort-btn" id="sortBtn">按截止时间排序</button>
+    </div>
+
+    <!-- 番茄专注：25 分钟专注 + 5 分钟休息，完成一次记一笔 -->
+    <div class="pomodoro">
+      <div class="pomodoro-head">
+        <span class="pomodoro-name">番茄专注</span>
+        <span class="pomodoro-phase" id="pomoPhase">待开始</span>
+      </div>
+      <div class="pomodoro-time" id="pomoTime">25:00</div>
+      <div class="pomodoro-actions">
+        <button type="button" class="pomo-btn" id="pomoToggle">开始</button>
+        <button type="button" class="pomo-btn" id="pomoReset">重置</button>
+      </div>
+    </div>
+
+    <!-- 情绪记录：每日心情打卡 + 焦虑缓解呼吸引导 -->
+    <div class="mood">
+      <div class="mood-head">
+        <span class="mood-name">今日心情</span>
+      </div>
+      <div class="mood-options" id="moodOptions">
+        <button type="button" class="mood-btn" data-mood="高效">😄 高效</button>
+        <button type="button" class="mood-btn" data-mood="平静">😌 平静</button>
+        <button type="button" class="mood-btn" data-mood="低落">😔 低落</button>
+        <button type="button" class="mood-btn" data-mood="焦虑">😰 焦虑</button>
+      </div>
+      <p class="mood-hint" id="moodHint">今天状态如何？点一个记下来。</p>
+
+      <button type="button" class="breathe-toggle" id="breatheToggle">焦虑缓解 · 3 分钟呼吸</button>
+      <div class="breathe" id="breathe" hidden>
+        <div class="breathe-circle" id="breatheCircle"></div>
+        <p class="breathe-text" id="breatheText">吸气…</p>
+      </div>
+    </div>
+
+    <!-- 任务列表：内容由 app.js 按数据源渲染（Day 8 起是 mock，Day 23 换真实 API） -->
     <ul class="task-list" id="taskList"></ul>
+
+    <!-- 四种页面状态里，除了「有数据」（= 上面的列表），其余三种都在这：
+         加载中 / 空 / 出错，由 app.js 按状态切换显示与隐藏 -->
+    <div class="list-state" id="loadingState" hidden>
+      <span class="spinner" aria-hidden="true"></span>
+      <p>正在加载任务…</p>
+    </div>
+
+    <div class="list-state list-state--error" id="errorState" hidden>
+      <p>任务加载失败了，可能是网络或数据出了点问题。</p>
+      <button type="button" class="sort-btn" id="retryBtn">重新加载</button>
+    </div>
 
     <!-- 列表为空时显示（由 JS 控制显示与隐藏） -->
     <p class="empty-hint" id="emptyHint" hidden>还没有任务。在上面输入一行字，按回车。</p>
@@ -49,6 +101,11 @@
 
   </main>
 
+  <script src="theme.js"></script>
+  <script src="parse.js"></script>
+  <script src="pomodoro.js"></script>
+  <script src="mood.js"></script>
+  <script src="mock-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

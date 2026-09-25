@@ -31,6 +31,11 @@
     undoBar: document.getElementById('undoBar'),
     undoText: document.getElementById('undoText'),
     undoBtn: document.getElementById('undoBtn'),
+    parseHint: document.getElementById('parseHint'),
+    sortBtn: document.getElementById('sortBtn'),
+    loadingState: document.getElementById('loadingState'),
+    errorState: document.getElementById('errorState'),
+    retryBtn: document.getElementById('retryBtn'),
   };
 
   /* 任务队列。数组的顺序就是位置，位置就是优先级。 */
@@ -51,19 +56,26 @@
 
   /* ---------------- 存取 ---------------- */
 
-  function load() {
+  /* 同步读 localStorage，返回解析后的任务数组（不改全局 tasks）。
+     读坏了就返回空数组 —— 页面不能因此打不开。 */
+  function readLocal() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const data = raw ? JSON.parse(raw) : [];
-      tasks = Array.isArray(data)
+      return Array.isArray(data)
         ? data
             .filter((t) => t && typeof t.text === 'string')
-            .map((t) => ({ id: t.id || makeId(), text: t.text, done: !!t.done }))
+            .map((t) => ({
+              id: t.id || makeId(),
+              text: t.text,
+              done: !!t.done,
+              due: t.due || null,        // 旧数据没有这两个字段，读进来补成 null
+              estimate: t.estimate || null,
+            }))
         : [];
     } catch (err) {
-      // 本地数据坏了就当作空列表，页面不能因此打不开
       console.warn('读取本地任务失败，已按空列表处理：', err);
-      tasks = [];
+      return [];
     }
   }
 
@@ -72,6 +84,56 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     } catch (err) {
       console.warn('保存任务失败：', err);
+    }
+  }
+
+  /* ---------------- 数据源 + 四种页面状态（Day 8） ----------------
+     把「数据从哪来」抽成一层：今天走 mock（mock-data.js），Day 23 换成 fetch 真实 API。
+     四种状态：加载中 loading / 有数据 content（就是列表）/ 空 empty / 出错 error。 */
+
+  const DATA_SOURCE = 'mock'; // Day 23 改成 'api'
+
+  function loadFromSource() {
+    if (DATA_SOURCE === 'mock') {
+      return window.MockData.loadTasks(); // Promise，行为等同 fetch
+    }
+    // Day 23 换成：return fetch('/api/tasks').then(r => r.json())
+    return Promise.resolve(readLocal());
+  }
+
+  /* 只负责 loading / error 两个容器的显隐；空和有数据由 render() 说了算 */
+  function showState(state) {
+    el.loadingState.hidden = state !== 'loading';
+    el.errorState.hidden = state !== 'error';
+    if (state === 'error') {
+      // 出错时列表和空提示都清掉，只留下错误框
+      el.list.innerHTML = '';
+      el.emptyHint.hidden = true;
+    }
+  }
+
+  async function bootstrap() {
+    const existing = readLocal();
+
+    // localStorage 里已经有数据（老用户 / 之前加载过）：直接渲染，不再走 mock
+    if (existing.length > 0) {
+      tasks = existing;
+      showState('ready');
+      render();
+      return;
+    }
+
+    // 首次打开（localStorage 为空）：走数据源，演示 加载中 → 有数据/空/出错
+    showState('loading');
+    try {
+      const initial = await loadFromSource();
+      tasks = initial;
+      save();          // 假数据「种子」进 localStorage，之后增删改就在本地正常进行
+      showState('ready');
+      render();
+    } catch (err) {
+      console.warn('加载任务失败：', err);
+      showState('error');
     }
   }
 
@@ -123,6 +185,49 @@
     // 大字换人和序号圆点变陶土色，本身已经够说明「现在是这一件」了。
   }
 
+  /* ---------------- AI 录入的显示格式化 ---------------- */
+
+  /* 截止日期 YYYY-MM-DD → 友好中文：今天 / 明天 / 后天 / 周X / X月X日 */
+  function formatDue(dateStr) {
+    if (!dateStr) return '';
+    const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return dateStr;
+    const due = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    const now = new Date();
+    const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.round((due - t0) / 86400000);
+    const WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    if (diff === 0) return '今天';
+    if (diff === 1) return '明天';
+    if (diff === 2) return '后天';
+    if (diff > 2 && diff < 7) return WD[due.getDay()];
+    return `${Number(m[2])}月${Number(m[3])}日`;
+  }
+
+  /* 分钟数 → 友好中文：X 分钟 / X 小时 / X 小时 Y 分钟 */
+  function formatEstimate(minutes) {
+    if (minutes == null) return '';
+    if (minutes < 60) return `${minutes} 分钟`;
+    const h = Math.floor(minutes / 60);
+    const rem = minutes % 60;
+    if (rem === 0) return `${h} 小时`;
+    return `${h} 小时 ${rem} 分钟`;
+  }
+
+  /* 任务行下方的小字标签：截止 / 时长。都没有就返回 null，不占地方。 */
+  function buildMeta(task) {
+    const parts = [];
+    const due = formatDue(task.due);
+    const est = formatEstimate(task.estimate);
+    if (due) parts.push(`截止 ${due}`);
+    if (est) parts.push(`约 ${est}`);
+    if (!parts.length) return null;
+    const meta = document.createElement('span');
+    meta.className = 'task-meta';
+    meta.textContent = parts.join(' · ');
+    return meta;
+  }
+
   function buildRow(task, index) {
     const editing = task.id === editingId;
 
@@ -154,6 +259,8 @@
       );
     } else {
       text.textContent = task.text;
+      const meta = buildMeta(task);
+      if (meta) text.appendChild(meta); // AI 录入识别的「截止 / 时长」小标签
       actions.append(
         iconButton('task-btn js-done', task.done ? '↺' : '✓', task.done ? '撤销完成' : '标记完成'),
         iconButton('task-btn js-edit', '✎', '编辑文字'),
@@ -223,9 +330,35 @@
     const trimmed = text.trim();
     if (!trimmed) return; // 空输入不添乱
     clearUndo();
-    const task = { id: makeId(), text: trimmed, done: false }; // 新任务排到队尾
+
+    // AI 录入：先解析，拆出任务名 / 截止 / 时长（本地规则，见 parse.js）
+    const parsed = parseTask(trimmed);
+    const task = {
+      id: makeId(),
+      text: parsed.text,
+      done: false,
+      due: parsed.due,
+      estimate: parsed.estimate,
+    };
+
     tasks.push(task);
     justAddedId = task.id; // 让它在渲染时滑入
+    save();
+    render();
+  }
+
+  /* 智能排序（预排序）：未完成任务按截止时间从近到远排，
+     没截止时间的排在后面（保持相对顺序），已完成永远沉底。
+     只给起点，用户仍可拖拽改 —— 不替用户拍板。 */
+  function sortByDue() {
+    clearUndo();
+    const done = tasks.filter((t) => t.done);
+    const open = tasks.filter((t) => !t.done);
+    const withDue = open
+      .filter((t) => t.due)
+      .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0));
+    const withoutDue = open.filter((t) => !t.due);
+    tasks = [...withDue, ...withoutDue, ...done];
     save();
     render();
   }
@@ -309,6 +442,31 @@
 
   /* ---------------- 事件绑定 ---------------- */
 
+  /* 输入时实时预览 AI 解析结果，让用户知道「会记成什么」，不满意可改 */
+  el.input.addEventListener('input', () => {
+    const raw = el.input.value.trim();
+    if (!raw) {
+      el.parseHint.hidden = true;
+      return;
+    }
+    const parsed = parseTask(raw);
+    const due = formatDue(parsed.due);
+    const est = formatEstimate(parsed.estimate);
+    const bits = [];
+    if (parsed.due) bits.push(`截止 ${due}`);
+    if (parsed.estimate) bits.push(`约 ${est}`);
+
+    const nameChanged = parsed.text !== raw && parsed.text !== '';
+    if (!bits.length && !nameChanged) {
+      el.parseHint.hidden = true;
+      return;
+    }
+
+    const namePart = nameChanged ? `将记为「${parsed.text}」` : '';
+    el.parseHint.hidden = false;
+    el.parseHint.textContent = [namePart, bits.join(' · ')].filter(Boolean).join('　');
+  });
+
   el.form.addEventListener('submit', (event) => {
     event.preventDefault(); // 阻止表单提交导致页面刷新
     addTask(el.input.value);
@@ -317,6 +475,8 @@
   });
 
   el.undoBtn.addEventListener('click', undoDelete);
+  el.sortBtn.addEventListener('click', sortByDue);
+  el.retryBtn.addEventListener('click', bootstrap); // 出错后点「重新加载」
 
   /* 任务行上的按钮统一用事件委托处理（行是动态生成的） */
   el.list.addEventListener('click', (event) => {
@@ -450,6 +610,5 @@
 
   /* ---------------- 启动 ---------------- */
 
-  load();
-  render();
+  bootstrap();
 })();

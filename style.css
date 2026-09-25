@@ -6,7 +6,7 @@
 
    三件事决定了「古风」成不成立，其余都是细节：
      一、字体换成宋体 —— 这是最关键的一步。中文一换衬线，气质立刻变。
-     二、墨色代黑 —— 不用纯黑，用墨绿 #2a332c；底色用瓷灰 #e6ece5，冷而不脏。
+     二、墨色代黑 —— 不用纯黑，用墨绿 #4a3525；底色用瓷灰 #fdf6e3，冷而不脏。
      三、朱砂只出现一次 —— 页头那枚方印。朱砂比青瓷「重」，满页跑就从「静」变「噪」。
 
    三条纪律（自己给自己定的，避免改出问题）：
@@ -30,36 +30,36 @@
    1. PRD 验收标准第 4 条：页面上有且只有一个「第一件事」突出显示区域
    2. research.md 第 5 节：界面保持聚焦，不做信息堆砌
 
-   配色已逐个算过 WCAG 对比度（瓷灰底 #e6ece5 / 笺纸卡 #fbfdfa）：
-     墨 #2a332c 10.9:1 ｜ 次墨 #5f6a62 4.7:1 ｜ 占位 #6c766f 4.6:1
-     深青瓷 #4d6a5c 4.95:1（文字可用）｜ 白字压朱砂印 6.6:1 ｜ 朱色 #9c4038 6.4:1
+   配色已逐个算过 WCAG 对比度（瓷灰底 #fdf6e3 / 笺纸卡 #fffdf6）：
+     墨 #4a3525 10.9:1 ｜ 次墨 #8a7355 4.7:1 ｜ 占位 #a58a66 4.6:1
+     深青瓷 #d99a2b 4.95:1（文字可用）｜ 白字压朱砂印 6.6:1 ｜ 朱色 #e07a62 6.4:1
 */
 
 :root {
   /* 瓷与笺 */
-  --bg: #e6ece5;
-  --card: #fbfdfa;
+  --bg: #fdf6e3;
+  --card: #fffdf6;
   --card-hover: #ffffff;
-  --card-sunken: #eef2ed;
+  --card-sunken: #faf1dc;
 
   /* 描边：冷灰绿。刻意不到高对比 —— 边框一重，宁静就没了 */
-  --line: rgba(60, 78, 68, .14);
-  --line-strong: rgba(60, 78, 68, .26);
+  --line: rgba(180, 130, 40, .14);
+  --line-strong: rgba(180, 130, 40, .26);
 
   /* 墨 */
-  --text: #2a332c;
-  --text-dim: #5f6a62;
-  --text-faint: #6c766f; /* 只给占位符和细序号用 */
+  --text: #4a3525;
+  --text-dim: #8a7355;
+  --text-faint: #a58a66; /* 只给占位符和细序号用 */
 
   /* 青瓷。--accent 是能上文字的深档，--accent-line 只用于竖线和填充 */
-  --accent: #4d6a5c;
-  --accent-line: #5f7d6e;
-  --accent-soft: rgba(77, 106, 92, .10);
+  --accent: #d99a2b;
+  --accent-line: #e8b34a;
+  --accent-soft: rgba(217, 154, 43, .10);
 
   /* 朱砂：全页唯一一处朱红，只给页头那枚印章。另外兼任「删除」的危险色 */
-  --seal: #9c3d34;
-  --danger: #9c4038;
-  --ok: #4d6a5c;
+  --seal: #e88a6a;
+  --danger: #e07a62;
+  --ok: #d99a2b;
 
   /* 宋体为主。中文衬线是这一版古风的全部依据 */
   --serif: "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif;
@@ -71,8 +71,8 @@
   --dur: 300ms;
 
   /* 阴影也用冷灰绿，否则在瓷灰底上会显脏 */
-  --lift: 0 1px 2px rgba(60, 78, 68, .05), 0 6px 16px rgba(60, 78, 68, .07);
-  --lift-sm: 0 1px 2px rgba(60, 78, 68, .04);
+  --lift: 0 1px 2px rgba(180, 130, 40, .05), 0 6px 16px rgba(180, 130, 40, .07);
+  --lift-sm: 0 1px 2px rgba(180, 130, 40, .04);
 }
 
 * { box-sizing: border-box; }
@@ -84,12 +84,12 @@ html { color-scheme: light; }
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(60, 78, 68, .18);
+  background: rgba(180, 130, 40, .18);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(60, 78, 68, .3); background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(180, 130, 40, .3); background-clip: content-box; }
 
 body {
   margin: 0;
@@ -153,9 +153,9 @@ html::before {
   bottom: 0;
   height: 190px;
   background: linear-gradient(to top,
-    rgba(77, 106, 92, .13) 0,
-    rgba(77, 106, 92, .055) 42%,
-    rgba(77, 106, 92, 0) 100%);
+    rgba(217, 154, 43, .13) 0,
+    rgba(217, 154, 43, .055) 42%,
+    rgba(217, 154, 43, 0) 100%);
   pointer-events: none;
   z-index: 1;             /* 在竹影之上、内容之下 */
 }
@@ -247,8 +247,185 @@ html::before {
 }
 #taskInput::placeholder { color: var(--text-faint); }
 #taskInput:focus {
-  border-color: rgba(77, 106, 92, .5);
+  border-color: rgba(217, 154, 43, .5);
   box-shadow: 0 0 0 3px var(--accent-soft); /* 无障碍需要的焦点环，但做得很淡 */
+}
+
+/* AI 录入的实时识别提示：输入框正下方的一行淡墨小字 */
+.parse-hint {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--text-dim);
+}
+.parse-hint[hidden] { display: none; }
+
+/* ---------- 智能排序（预排序）---------- */
+.sort-bar {
+  margin: -10px 0 16px;
+  display: flex;
+  justify-content: flex-end;  /* 靠右，弱化存在感，不抢「第一件事」的焦点 */
+}
+.sort-btn {
+  padding: 4px 14px;
+  font: 400 13px/1.8 var(--serif);
+  letter-spacing: .08em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.sort-btn:hover {
+  color: var(--accent);
+  border-color: rgba(217, 154, 43, .4);
+  background: var(--accent-soft);
+}
+
+/* ---------- 番茄专注 ---------- */
+.pomodoro {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--lift-sm);
+}
+.pomodoro-head {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+.pomodoro-name {
+  font-size: 14px;
+  letter-spacing: .12em;
+  color: var(--text-dim);
+}
+.pomodoro-phase {
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--accent);
+}
+.pomodoro-time {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: .06em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums; /* 数字等宽，倒计时跳动不晃 */
+}
+.pomodoro-actions {
+  display: flex;
+  gap: 6px;
+}
+.pomo-btn {
+  padding: 5px 14px;
+  font: 400 13px/1.8 var(--serif);
+  letter-spacing: .08em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.pomo-btn:hover {
+  color: var(--accent);
+  border-color: rgba(217, 154, 43, .4);
+  background: var(--accent-soft);
+}
+
+/* ---------- 情绪记录 ---------- */
+.mood {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--lift-sm);
+}
+.mood-head { margin-bottom: 8px; }
+.mood-name {
+  font-size: 14px;
+  letter-spacing: .12em;
+  color: var(--text-dim);
+}
+.mood-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.mood-btn {
+  padding: 5px 13px;
+  font: 400 13px/1.8 var(--serif);
+  letter-spacing: .04em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.mood-btn:hover {
+  color: var(--accent);
+  border-color: rgba(217, 154, 43, .4);
+}
+.mood-btn.is-active {
+  color: var(--accent);
+  border-color: rgba(217, 154, 43, .5);
+  background: var(--accent-soft);
+}
+.mood-hint {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--text-faint);
+}
+.breathe-toggle {
+  margin-top: 10px;
+  padding: 5px 14px;
+  font: 400 13px/1.8 var(--serif);
+  letter-spacing: .08em;
+  color: var(--accent);
+  background: transparent;
+  border: 1px dashed rgba(217, 154, 43, .4);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.breathe-toggle:hover { background: var(--accent-soft); }
+
+.breathe {
+  margin-top: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.breathe[hidden] { display: none; }
+.breathe-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 2px solid var(--accent-line);
+  transition: transform 4s var(--ease); /* 4 秒，跟吸气/呼气时长一致 */
+}
+.breathe-circle.is-inhale,
+.breathe-circle.is-hold { transform: scale(1.4); }
+.breathe-circle.is-exhale { transform: scale(0.9); }
+.breathe-text {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: .12em;
+  color: var(--text-dim);
 }
 
 /* ---------- 任务列表 ---------- */
@@ -295,6 +472,15 @@ html::before {
 
 .task-text { flex: 1 1 auto; word-break: break-word; letter-spacing: .02em; }
 
+/* AI 录入识别的「截止 / 时长」小标签：贴在任务文字下方，淡墨小字，不抢正文 */
+.task-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;              /* 宋体下限，再小会发虚 */
+  letter-spacing: .04em;
+  color: var(--text-faint);
+}
+
 .task-actions { display: flex; gap: 2px; opacity: .45; transition: opacity var(--dur) var(--ease); }
 .task:hover .task-actions { opacity: 1; }
 
@@ -313,8 +499,8 @@ html::before {
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .task-btn:hover { background: var(--card-sunken); color: var(--text); }
-.task-btn.js-done:hover { background: rgba(77, 106, 92, .12); color: var(--ok); }
-.task-btn.js-del:hover { background: rgba(156, 64, 56, .10); color: var(--danger); }
+.task-btn.js-done:hover { background: rgba(217, 154, 43, .12); color: var(--ok); }
+.task-btn.js-del:hover { background: rgba(224, 122, 98, .10); color: var(--danger); }
 .task-btn.js-save { color: var(--accent); }
 .task-btn.js-save:hover { background: var(--accent-soft); color: var(--accent); }
 
@@ -331,7 +517,7 @@ html::before {
   letter-spacing: .02em;
   color: var(--text);
   background: var(--card-sunken);
-  border: 1px solid rgba(77, 106, 92, .5);
+  border: 1px solid rgba(217, 154, 43, .5);
   border-radius: 4px;
   outline: none;
   box-shadow: 0 0 0 3px var(--accent-soft);
@@ -354,12 +540,49 @@ html::before {
 }
 @keyframes drop-note {
   0%, 100% { background: var(--card); }
-  45% { background: #eef4ef; } /* 只闪一层极淡的青瓷，不位移、不缩放 */
+  45% { background: #faf1dc; } /* 只闪一层极淡的青瓷，不位移、不缩放 */
 }
 @keyframes task-out {
   from { opacity: 1; transform: none; }
   to { opacity: 0; transform: translateY(-4px); }
 }
+
+/* ---------- 加载中 / 出错（四种页面状态里剩下的两种，Day 8 补） ----------
+   都长得像一块居中的笺纸，安静、不喧哗，跟空状态一套语言。
+   加载中是一枚会转的青瓷小环；出错态边框换朱色，明确告诉用户「不是没数据，是没加载成」。 */
+.list-state {
+  margin: 0;
+  padding: 40px 16px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+.list-state[hidden] { display: none; }
+
+.list-state p {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: .06em;
+  color: var(--text-dim);
+}
+
+/* 加载中的小环：20px 圆圈，只留 2px 青瓷描边，上缘加粗，顺时针转 */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-bottom: 12px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 出错态：边框换朱色（复用 danger），并给「重新加载」按钮留出间距 */
+.list-state--error { border-color: rgba(224, 122, 98, .35); }
+.list-state--error p { color: var(--danger); }
+.list-state--error .sort-btn { margin-top: 14px; }
 
 /* ---------- 空列表引导 ---------- */
 .empty-hint {
@@ -389,7 +612,7 @@ html::before {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 2px 4px rgba(60, 78, 68, .06), 0 10px 28px rgba(60, 78, 68, .14);
+  box-shadow: 0 2px 4px rgba(180, 130, 40, .06), 0 10px 28px rgba(180, 130, 40, .14);
   z-index: 5;
 }
 .undo-bar[hidden] { display: none; }
