@@ -300,6 +300,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 18px;
+  flex-wrap: wrap; /* 窄屏放不下时「开始/重置」换行，而不是把「番茄专注」挤压拆字（Day 9 补漏） */
   margin-bottom: var(--space-lg);
   padding: 14px 18px;
   background: var(--card);
@@ -316,11 +317,13 @@ button:focus-visible {
   font-size: 14px;
   letter-spacing: .12em;
   color: var(--text-dim);
+  white-space: nowrap; /* 两字词不许被窄屏拆开（Day 9 补漏） */
 }
 .pomodoro-phase {
   font-size: 12px;
   letter-spacing: .06em;
   color: var(--accent);
+  white-space: nowrap; /* 同上，「待开始」不许拆成「待开/始」 */
 }
 .pomodoro-time {
   flex: 1 1 auto;
@@ -344,6 +347,7 @@ button:focus-visible {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   cursor: pointer;
+  white-space: nowrap; /* 「开始/重置」不许拆成两行（Day 9 补漏） */
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 .pomo-btn:hover {
