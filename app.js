@@ -37,6 +37,9 @@
     errorState: document.getElementById('errorState'),
     retryBtn: document.getElementById('retryBtn'),
     toast: document.getElementById('toast'),
+    filterTabs: document.getElementById('filterTabs'),
+    filterSearch: document.getElementById('filterSearch'),
+    filterCount: document.getElementById('filterCount'),
   };
 
   /* 任务队列。数组的顺序就是位置，位置就是优先级。 */
@@ -72,6 +75,10 @@
      表演型的（首屏依次浮入、焦点转移脉冲）已全部删除。 */
   let justAddedId = null;   // 刚添加的任务 → 淡入
   let justDroppedId = null; // 刚拖完的任务 → 落点提示（只闪一层暖色，不位移）
+
+  /* 筛选状态（Day 12）：状态 tab（全部/进行中/已完成）+ 搜索关键词，两者叠加（AND） */
+  let filterState = 'all';   // 'all' | 'open' | 'done'
+  let filterQuery = '';      // 搜索框里的关键词（已 trim）
 
   /* ---------------- 存取 ---------------- */
 
@@ -173,13 +180,22 @@
     // 未完成的排在前面，已完成的沉到底部；同组内保持原有相对顺序
     const ordered = [...tasks].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
 
+    // 筛选（Day 12）：先按状态，再按关键词，两者叠加（AND）
+    const filtered = ordered.filter((t) => {
+      if (filterState === 'open' && t.done) return false;
+      if (filterState === 'done' && !t.done) return false;
+      if (filterQuery && !t.text.toLowerCase().includes(filterQuery.toLowerCase())) return false;
+      return true;
+    });
+
     el.list.innerHTML = '';
-    ordered.forEach((task, index) => {
+    filtered.forEach((task, index) => {
       el.list.appendChild(buildRow(task, index));
     });
 
-    // 空列表时显示引导文案，不空白、不报错（验收标准 4）
-    el.emptyHint.hidden = ordered.length > 0;
+    // 空状态（区分「本来没任务」和「筛选无结果」）+ 数量提示
+    renderEmpty(ordered.length, filtered.length);
+    renderCount(ordered.length, filtered.length);
 
     // 编辑态：重新渲染后把焦点放回输入框，光标停在末尾
     if (editingId) {
@@ -194,6 +210,30 @@
 
     justAddedId = null;   // 一次性动画标记，用完即清
     justDroppedId = null;
+  }
+
+  /* 空状态（Day 12）：区分「本来就没任务」和「筛选后没结果」两种，文案不同 */
+  function renderEmpty(total, visible) {
+    if (total === 0) {
+      el.emptyHint.textContent = '还没有任务。在上面输入一行字，按回车。';
+      el.emptyHint.hidden = false;
+    } else if (visible === 0) {
+      el.emptyHint.textContent = '没有符合条件的任务。换个筛选，或清空搜索。';
+      el.emptyHint.hidden = false;
+    } else {
+      el.emptyHint.hidden = true;
+    }
+  }
+
+  /* 数量可感知（Day 12）：筛选生效时显示「共 N 条 · 匹配 M 条」，给用户一个交代 */
+  function renderCount(total, visible) {
+    const filtering = filterState !== 'all' || filterQuery !== '';
+    if (filtering) {
+      el.filterCount.textContent = `共 ${total} 条 · 匹配 ${visible} 条`;
+      el.filterCount.hidden = false;
+    } else {
+      el.filterCount.hidden = true;
+    }
   }
 
   function renderFocus() {
@@ -549,6 +589,24 @@
   el.undoBtn.addEventListener('click', undoDelete);
   el.sortBtn.addEventListener('click', sortByDue);
   el.retryBtn.addEventListener('click', bootstrap); // 出错后点「重新加载」
+
+  /* 筛选（Day 12）：状态 tab 切换 + 搜索框实时过滤 */
+  el.filterTabs.addEventListener('click', (event) => {
+    const tab = event.target.closest('.filter-tab');
+    if (!tab) return;
+    filterState = tab.dataset.filter;
+    el.filterTabs.querySelectorAll('.filter-tab').forEach((t) => {
+      const active = t === tab;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    render();
+  });
+
+  el.filterSearch.addEventListener('input', () => {
+    filterQuery = el.filterSearch.value.trim();
+    render();
+  });
 
   /* 任务行上的按钮统一用事件委托处理（行是动态生成的） */
   el.list.addEventListener('click', (event) => {

@@ -37,6 +37,26 @@
       <p class="parse-hint" id="parseHint" hidden></p>
     </form>
 
+    <!-- 筛选（Day 12）：状态 tab + 搜索框，先筛后排。三种情况：有结果/无结果/清空恢复 -->
+    <div class="filter-bar">
+      <div class="filter-tabs" id="filterTabs" role="tablist" aria-label="按状态筛选">
+        <button type="button" class="filter-tab is-active" data-filter="all" role="tab" aria-selected="true">全部</button>
+        <button type="button" class="filter-tab" data-filter="open" role="tab" aria-selected="false">进行中</button>
+        <button type="button" class="filter-tab" data-filter="done" role="tab" aria-selected="false">已完成</button>
+      </div>
+      <input
+        type="search"
+        class="filter-search"
+        id="filterSearch"
+        placeholder="搜索任务…"
+        aria-label="搜索任务"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+    <!-- 数量可感知：筛选生效时显示「共 N 条 · 匹配 M 条」 -->
+    <p class="filter-count" id="filterCount" hidden></p>
+
     <!-- 智能排序：工具按截止时间给初始顺序当起点，用户仍可拖拽微调（预排序，不代排） -->
     <div class="sort-bar">
       <button type="button" class="sort-btn" id="sortBtn">按截止时间排序</button>

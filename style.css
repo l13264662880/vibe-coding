@@ -295,6 +295,66 @@ button:focus-visible {
   background: var(--accent-soft);
 }
 
+/* ---------- 筛选（Day 12）：状态 tab + 搜索框 ----------
+   守宁静纪律：纯色、细描边、无发光无渐变；激活态靠「笺纸底 + 墨字」区分。 */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.filter-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--card-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.filter-tab {
+  padding: 4px 14px;
+  font: 400 13px/1.8 var(--serif);
+  letter-spacing: .06em;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.filter-tab:hover { color: var(--text); }
+.filter-tab.is-active {
+  color: var(--text);
+  background: var(--card);
+  box-shadow: var(--lift-sm);
+}
+.filter-search {
+  flex: 1 1 160px;
+  min-width: 140px;
+  padding: 5px 12px;
+  font: 400 14px/1.8 var(--serif);
+  letter-spacing: .02em;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.filter-search:focus {
+  border-color: rgba(217, 154, 43, .5);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.filter-search::placeholder { color: var(--text-faint); }
+.filter-count {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--text-soft);
+}
+.filter-count[hidden] { display: none; }
+
 /* ---------- 番茄专注 ---------- */
 .pomodoro {
   display: flex;
