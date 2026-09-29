@@ -36,6 +36,7 @@
     loadingState: document.getElementById('loadingState'),
     errorState: document.getElementById('errorState'),
     retryBtn: document.getElementById('retryBtn'),
+    toast: document.getElementById('toast'),
   };
 
   /* 任务队列。数组的顺序就是位置，位置就是优先级。 */
@@ -47,6 +48,24 @@
   /* 刚删掉的那条，用于撤销：{ task, index }。
      只活在内存里 —— 刷新页面就没了，正好满足验收标准 6「刷新后撤销入口不再出现」。 */
   let lastDeleted = null;
+
+  /* 轻提示的自动关闭计时器（Day 11）：连续提示时重置，避免堆叠。 */
+  let toastTimer = null;
+
+  /* 轻提示：操作生效后的短暂反馈。内容换新、动画重播，1.6 秒后自动隐去。
+     复制 / 完成 / 排序三个交互共用这一个入口。 */
+  function showToast(message) {
+    el.toast.textContent = message;
+    el.toast.hidden = false;
+    el.toast.classList.remove('toast-show'); // 先摘掉，再强制回流，让动画能重播
+    void el.toast.offsetWidth;
+    el.toast.classList.add('toast-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      el.toast.hidden = true;
+      el.toast.classList.remove('toast-show');
+    }, 1600);
+  }
 
   /* 只用来触发一次性的动画，渲染完就清掉，不参与任何数据逻辑。
      宁静版只留三个「交代因果」的功能性过渡：新增淡入、落位提示、删除退场。
@@ -264,6 +283,7 @@
       actions.append(
         iconButton('task-btn js-done', task.done ? '↺' : '✓', task.done ? '撤销完成' : '标记完成'),
         iconButton('task-btn js-edit', '✎', '编辑文字'),
+        iconButton('task-btn js-copy', '⧉', '复制'),
         iconButton('task-btn js-del', '✕', '删除')
       );
     }
@@ -358,9 +378,14 @@
       .filter((t) => t.due)
       .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0));
     const withoutDue = open.filter((t) => !t.due);
-    tasks = [...withDue, ...withoutDue, ...done];
+    const next = [...withDue, ...withoutDue, ...done];
+
+    // 排序「生效」要让人看得见：顺序真变了、还是本来就已经是最佳顺序，都明确说一声
+    const changed = next.some((t, i) => tasks[i] !== t);
+    tasks = next;
     save();
     render();
+    showToast(changed ? '已按截止时间排好' : '顺序没变，已经是最佳顺序');
   }
 
   /* 标记完成 / 撤销完成。完成后划线、沉底、退出「第一件事」（验收标准 8）。 */
@@ -371,6 +396,7 @@
     task.done = !task.done;
     save();
     render();
+    showToast(task.done ? '已完成「' + shorten(task.text) + '」' : '已恢复为未完成');
   }
 
   /* 删除：其余任务自动补位（数组 splice 天然做到，相对顺序不变，验收标准 5）。 */
@@ -414,6 +440,52 @@
     clearUndo();
     save();
     render();
+  }
+
+  /* 复制到剪贴板（Day 11）：优先用 Clipboard API（localhost 可用），
+     不可用（如 file:// 打开）就降级到临时 textarea + execCommand。 */
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (err) { /* 走降级 */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /* 复制一条任务：把文字写进剪贴板，按钮短暂变「✓」作为生效反馈，1.5 秒后还原。 */
+  async function copyTask(id, btn) {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    const ok = await copyText(task.text);
+    if (!ok) {
+      showToast('复制失败，请手动选中复制');
+      return;
+    }
+    const original = btn.textContent;
+    btn.classList.add('is-copied');
+    btn.textContent = '✓';
+    btn.setAttribute('aria-label', '已复制');
+    btn.setAttribute('title', '已复制');
+    setTimeout(() => {
+      btn.classList.remove('is-copied');
+      btn.textContent = original;
+      btn.setAttribute('aria-label', '复制');
+      btn.setAttribute('title', '复制');
+    }, 1500);
   }
 
   function startEdit(id) {
@@ -509,6 +581,10 @@
     }
     if (event.target.closest('.js-edit')) {
       startEdit(id);
+      return;
+    }
+    if (event.target.closest('.js-copy')) {
+      copyTask(id, event.target.closest('.js-copy'));
       return;
     }
 

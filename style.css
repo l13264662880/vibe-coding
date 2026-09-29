@@ -519,6 +519,9 @@ button:focus-visible {
 .task-btn.js-del:hover { background: rgba(224, 122, 98, .10); color: var(--danger); }
 .task-btn.js-save { color: var(--accent); }
 .task-btn.js-save:hover { background: var(--accent-soft); color: var(--accent); }
+/* 复制：hover 与「完成」同款青瓷；点完短暂变「✓」确认（is-copied 由 JS 加） */
+.task-btn.js-copy:hover { background: rgba(217, 154, 43, .10); color: var(--ok); }
+.task-btn.js-copy.is-copied { color: var(--ok); background: var(--accent-soft); }
 
 /* 已完成：划线显示，沉到列表底部（沉底由 JS 排序实现） */
 .task.is-done { opacity: .62; cursor: default; }
@@ -642,6 +645,34 @@ button:focus-visible {
   transition: color var(--dur) var(--ease);
 }
 .undo-bar button:hover { color: var(--text); }
+
+/* ---------- 轻提示（Day 11）：操作生效后的短暂反馈 ----------
+   笺纸卡片 + 左侧一条 3px 青瓷竖线，呼应列表「一条竖线」的层级语言。
+   只用透明度 + 轻微上移，不发光、不缩放 —— 守住「宁静」纪律。 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(8px);
+  max-width: 82%;
+  padding: 9px 16px;
+  font: 400 13px/1.6 var(--serif);
+  letter-spacing: .02em;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--lift);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  pointer-events: none;
+  z-index: 20;
+}
+.toast.toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
 /* ---------- 窄屏 ---------- */
 @media (max-width: 560px) {
