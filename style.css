@@ -497,7 +497,7 @@ button:focus-visible {
   color: var(--text-soft);
 }
 
-.task-actions { display: flex; gap: 2px; opacity: .45; transition: opacity var(--dur) var(--ease); }
+.task-actions { display: flex; gap: 2px; opacity: .9; transition: opacity var(--dur) var(--ease); }
 .task:hover .task-actions { opacity: 1; }
 
 .task-btn {
