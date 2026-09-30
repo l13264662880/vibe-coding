@@ -199,6 +199,39 @@ html::before {
   user-select: none;
 }
 
+/* ---------- 视图导航（Day 13）：三个视图互切 ----------
+   三段等宽的导航，激活项用「笺纸底 + 墨字」区分，跟筛选 tab 同一套语言。
+   用 <a> 而不是 <button>：href="#/..." 天然改 hash、触发 hashchange，语义也更贴。 */
+.view-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-lg);
+  padding: 4px;
+  background: var(--card-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.view-nav-item {
+  flex: 1;
+  padding: 7px 0;
+  text-align: center;
+  text-decoration: none;
+  font: 400 14px/1.6 var(--serif);
+  letter-spacing: .12em;
+  color: var(--text-dim);
+  border-radius: 4px;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.view-nav-item:hover { color: var(--text); }
+.view-nav-item.is-active {
+  color: var(--text);
+  background: var(--card);
+  box-shadow: var(--lift-sm);
+}
+
+/* 视图容器：同一时刻只显示一个，其余 display:none */
+.view[hidden] { display: none; }
+
 /* ---------- 第一件事（全局唯一的高亮区，视觉焦点） ----------
    层级做法：一条 3px 青瓷竖线 + 更大的留白 + 略深的阴影。
    安静，但你一眼还是知道该看哪里。 */

@@ -3,20 +3,24 @@
    作用：在「接真实 API（第 3 周）」之前，先把「数据从哪来」抽象成一层。
    今天这里返回写死的假数据；Day 23 换成 fetch('/api/tasks') 即可，页面其余部分不用动。
 
-   四种页面状态怎么演示：
-     改下面 SCENARIO 的值，就能看到 加载中 / 有数据 / 空 / 出错 四种状态。
-       'content'  加载成功，返回 4 条示例任务（默认）
-       'empty'    加载成功，但一条都没有 → 空状态
-       'error'    加载失败 → 出错状态（带「重新加载」按钮）
+   四种页面状态怎么演示（Day 13 起改成地址栏参数，不用再改代码）：
+     直接在地址栏加 ?scenario=xxx 再刷新：
+       （默认）    加载成功，返回 4 条示例任务 → 有数据
+       empty      加载成功，但一条都没有 → 空状态
+       error      加载失败 → 出错状态（带「重新加载」按钮）
+       loading    永不加载完成 → 一直停在「加载中」（演示用）
 
-   改完后刷新页面即可看到对应状态。要回到「有数据」，把值改回 'content' 再刷新。
+   例如 index.html?scenario=empty 。去掉参数即回默认。
 */
 
 (function () {
   'use strict';
 
-  // 演示场景开关：'content' | 'empty' | 'error'
-  const SCENARIO = 'content';
+  // 演示场景开关：从地址栏 ?scenario= 读，支持 'empty' | 'error' | 'loading'；其余一律默认 content
+  const SCENARIO = (() => {
+    const q = new URLSearchParams(location.search).get('scenario');
+    return q === 'empty' || q === 'error' || q === 'loading' ? q : 'content';
+  })();
 
   // 模拟网络延迟（毫秒）。给「加载中」那一帧留出时间，否则一闪而过看不见
   const FAKE_DELAY = 600;
@@ -39,6 +43,8 @@
           reject(new Error('模拟加载失败'));
         } else if (SCENARIO === 'empty') {
           resolve([]);
+        } else if (SCENARIO === 'loading') {
+          return; // 永不 resolve/reject，一直停在「加载中」——演示用
         } else {
           resolve(MOCK_TASKS);
         }

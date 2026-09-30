@@ -136,9 +136,42 @@
       el.list.innerHTML = '';
       el.emptyHint.hidden = true;
     }
+    // 加载中 / 出错时还没有任何数据，「第一件事」先回到占位文案 ——
+    // 不重置的话会一直显示 HTML 里写死的「复习高数第三章」，像真有这条任务似的，误导
+    if (state !== 'ready') {
+      el.focusText.textContent = '先加一件事';
+      el.focusText.classList.add('is-empty');
+    }
+  }
+
+  /* 演示态开关：地址栏带 ?scenario=empty|error|loading 时返回对应场景，
+     否则返回 null（正常走本地数据）。
+     用途：哪怕 localStorage 里已有数据，也能强制走数据源，专门展示四种页面状态。
+     —— 与 mock-data.js 里的 SCENARIO 读的是同一个参数，两边保持一致。 */
+  function demoScenario() {
+    const q = new URLSearchParams(location.search).get('scenario');
+    return q === 'empty' || q === 'error' || q === 'loading' ? q : null;
   }
 
   async function bootstrap() {
+    const scenario = demoScenario();
+
+    // 演示态：跳过 localStorage（不读也不写），直接演示 加载中 → 空/出错。
+    // 不 save()，免得把演示数据种进真实数据里。演示完删掉地址栏参数即恢复正常。
+    if (scenario) {
+      showState('loading');
+      try {
+        const initial = await loadFromSource();
+        tasks = initial;
+        showState('ready');
+        render();
+      } catch (err) {
+        console.warn('加载任务失败：', err);
+        showState('error');
+      }
+      return;
+    }
+
     const existing = readLocal();
 
     // localStorage 里已经有数据（老用户 / 之前加载过）：直接渲染，不再走 mock
@@ -741,6 +774,34 @@
 
     tasks.splice(to, 0, moving);            // 落到新位置
   }
+
+  /* ---------------- 视图切换（Day 13）：hash 路由 ----------------
+     三个视图（待办/番茄/心情）互切。原理：点导航 <a href="#/..."> → 地址栏 hash 变
+     → 浏览器触发 hashchange → 显示对应视图、隐藏其余。零依赖，前进/后退直接可用。 */
+  const VIEWS = ['todo', 'pomodoro', 'mood'];
+
+  function currentView() {
+    const h = location.hash.replace(/^#\//, '');
+    return VIEWS.includes(h) ? h : 'todo';
+  }
+
+  function showView(name) {
+    document.querySelectorAll('[data-view-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.viewPanel !== name;
+    });
+    document.querySelectorAll('.view-nav-item').forEach((item) => {
+      const active = item.dataset.view === name;
+      item.classList.toggle('is-active', active);
+      if (active) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
+    });
+  }
+
+  window.addEventListener('hashchange', () => showView(currentView()));
+
+  // 初始：无 hash 时补成 #/todo（地址栏一眼看到当前视图），不触发 hashchange 故不重复渲染
+  if (!location.hash) history.replaceState(null, '', '#/todo');
+  showView(currentView());
 
   /* ---------------- 启动 ---------------- */
 
