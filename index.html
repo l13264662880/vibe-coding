@@ -55,7 +55,7 @@
       />
     </div>
     <!-- 数量可感知：筛选生效时显示「共 N 条 · 匹配 M 条」 -->
-    <p class="filter-count" id="filterCount" hidden></p>
+    <p class="filter-count" id="filterCount" aria-live="polite" hidden></p>
 
     <!-- 智能排序：工具按截止时间给初始顺序当起点，用户仍可拖拽微调（预排序，不代排） -->
     <div class="sort-bar">
@@ -111,7 +111,7 @@
     </div>
 
     <!-- 列表为空时显示（由 JS 控制显示与隐藏） -->
-    <p class="empty-hint" id="emptyHint" hidden>还没有任务。在上面输入一行字，按回车。</p>
+    <p class="empty-hint" id="emptyHint" aria-live="polite" hidden>还没有任务。在上面输入一行字，按回车。</p>
 
     <!-- 删除任务后出现的撤销入口（由 JS 控制） -->
     <div class="undo-bar" id="undoBar" hidden>
