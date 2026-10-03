@@ -777,6 +777,16 @@ button:focus-visible {
   .seal { width: 26px; height: 26px; font-size: 13px; }
 }
 
+/* Day 14 最小修复：≤374px 时任务行的四个操作按钮（✓ ✎ ⧉ ✕，约 126px）占了近半行，
+   把中文任务名挤成两三个字一行的碎行（360/320 宽实测截图确认，脚本测 scrollWidth 抓不到）。
+   修法沿用 Day 9 的思路：允许换行，按钮组掉到文字下一行靠右，整行宽度让给文字。
+   flex-basis 140px 只参与换行计算，宽屏下文字仍靠 flex-grow 拉伸 —— 375px 及以上布局零变化。 */
+@media (max-width: 374px) {
+  .task { flex-wrap: wrap; }
+  .task-text { flex: 1 1 140px; }
+  .task-actions { margin-left: auto; }
+}
+
 /* 竹影只在够宽时出现。重画后有效内容从 x≈44 起（最长那几片叶的叶尖），
    视口 1080px 往上就完整可见；990px 是下限，左侧只是叶尖被探出屏幕一点。
    注意：竹子的右边缘与内容区左边缘始终留 20px（left 用 calc(50% - 560px) 跟随
