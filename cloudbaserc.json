@@ -1,0 +1,12 @@
+{
+  "envId": "yuanjian-d5gdhcntg91022662",
+  "functionRoot": "functions",
+  "functions": [
+    {
+      "name": "api-health",
+      "timeout": 3,
+      "runtime": "Nodejs20.19",
+      "description": "/api/health 健康检查"
+    }
+  ]
+}

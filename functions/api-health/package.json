@@ -1,0 +1,6 @@
+{
+  "name": "api-health",
+  "version": "1.0.0",
+  "description": "先做哪件 /api/health 健康检查云函数",
+  "main": "index.js"
+}
