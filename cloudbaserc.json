@@ -7,6 +7,15 @@
       "timeout": 3,
       "runtime": "Nodejs20.19",
       "description": "/api/health 健康检查"
+    },
+    {
+      "name": "api-tasks",
+      "timeout": 5,
+      "runtime": "Nodejs20.19",
+      "description": "/api/tasks 读接口（全部任务 + 第一件事）",
+      "envVariables": {
+        "CLOUDBASE_APIKEY": "{{env.CLOUDBASE_APIKEY}}"
+      }
     }
   ]
 }

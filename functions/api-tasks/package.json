@@ -1,0 +1,6 @@
+{
+  "name": "api-tasks",
+  "version": "1.0.0",
+  "description": "先做哪件 /api/tasks 读接口（GET 全部任务 + 第一件事）",
+  "main": "index.js"
+}
