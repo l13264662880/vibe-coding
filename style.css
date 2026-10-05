@@ -1152,3 +1152,61 @@ button:focus-visible {
 [data-theme="dark"] .floaty { opacity: 0.22; }
 [data-theme="dark"] .task-index { color: #16161c; }
 [data-theme="dark"] .theme-swatch i { border-color: rgba(255, 255, 255, 0.2); }
+
+/* ============================================================
+   每套风格的点睛特色（克制，一处记忆点）
+   ============================================================ */
+
+/* —— 玩趣明快：焦点标签呼吸脉冲 + 序号徽章 hover 弹跳 —— */
+[data-theme="play"] .focus-label {
+  animation: label-breathe 2.6s ease-in-out infinite;
+}
+@keyframes label-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+[data-theme="play"] .task:hover .task-index {
+  animation: rank-pop 0.5s var(--ease-spring);
+}
+@keyframes rank-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.28) rotate(-12deg); }
+  70% { transform: scale(0.94); }
+  100% { transform: scale(1.08) rotate(-6deg); }
+}
+
+/* —— 极致极简：焦点区左侧 3px 强调竖线 + 列表项 hover 竖线浮现 —— */
+[data-theme="minimal"] .focus {
+  border-left: 3px solid var(--accent);
+  padding-left: 20px;
+}
+[data-theme="minimal"] .task {
+  border-left: 3px solid transparent;
+}
+[data-theme="minimal"] .task:hover {
+  border-left-color: var(--accent);
+  background: var(--card);
+}
+
+/* —— 杂志编辑：页头刊头双线 + 焦点标签前朱砂装饰横线 —— */
+[data-theme="editorial"] .app-header {
+  border-bottom: 4px double var(--line-strong);
+  padding-bottom: 16px;
+}
+[data-theme="editorial"] .focus-label::before {
+  content: "——";
+  margin-right: 8px;
+  color: var(--accent);
+}
+
+/* —— 暗夜：焦点区霓虹微光 + 序号徽章微光 —— */
+[data-theme="dark"] .focus {
+  box-shadow: var(--lift), 0 0 22px rgba(110, 168, 254, 0.12);
+  border-color: var(--accent);
+}
+[data-theme="dark"] .focus-label {
+  box-shadow: 0 0 14px var(--accent-soft);
+}
+[data-theme="dark"] .task-index {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.06);
+}
