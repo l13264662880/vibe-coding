@@ -94,3 +94,15 @@ tcb db execute -e <envId> --sql "SELECT table_name FROM information_schema.table
 - 读接口只需 `tasks` 一张表：`WHERE deleted_at IS NULL ORDER BY position`
 - 写接口记得**同时写一张 `task_events`**（本表的`event_type` 只有 7 个合法值，超出要改CHECK）
 - 拖拽排序会改 `position`，注意「部分唯一索引」在拖拽过程中的临时冲突
+
+## 八｜待办坑（Day 18+ 要处理）
+
+**两张表目前都是「无 RLS」**（2026-10-05 控制台实拍确认）。
+
+RLS = Row Level Security（行级安全策略），作用是「限制谁能看到哪些行」。
+单人使用时不需要，但**一旦要支持多用户**（PRD 第 6 节排队的「账号/云同步」），
+必须回来给 `tasks` / `task_events` 配 RLS + 访问策略，否则任何拿到云函数公网地址的人
+都能读写所有人的任务数据。
+
+Day 17 的读接口是公开的（无鉴权），届时至少要确认：单用户阶段这样可以，但别忘了这个坑。
+
