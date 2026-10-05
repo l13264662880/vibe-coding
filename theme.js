@@ -1,75 +1,118 @@
-/* theme.js —— 面板（网页版任务面板）的主题联动
+/* theme.js —— 面板主题：4 套完整风格 + 手动选择器 + 精灵换装联动兜底
  *
- * 精灵换装时会把主题序号写进 localStorage（键 sprite-theme），
- * 这里监听 storage 事件，精灵一换装，面板立刻换成同一套配色。
- * 面板的主题和精灵的 5 套一一对应（奶黄包/蜜桃/薄荷/天空/薰衣草）。
+ * 风格（data-theme 属性驱动，样式定义在 style.css）：
+ *   play       玩趣明快（默认）
+ *   minimal    极致极简
+ *   editorial  杂志编辑
+ *   dark       暗夜
  *
- * 玩趣明快重设计：5 套配色改成「柔和奶油底 + 明快强调色」，
- * 变量名保持不变，只换颜色值。
+ * 选择优先级（启动时）：
+ *   1. localStorage['panel-theme'] —— 用户在面板手动选过的风格
+ *   2. localStorage['sprite-theme'] —— 精灵换装联动（映射到风格，取模）
+ *   3. 默认 play
+ *
+ * 精灵联动：只有用户「没在面板手动选过」时才跟随精灵换装；
+ *   一旦手动选过（panel-theme 存在），面板就不再被精灵牵着走。
  */
 (() => {
   'use strict';
 
-  const THEME_KEY = 'sprite-theme';
+  const THEME_KEY = 'panel-theme';      // 面板自己选的风格
+  const SPRITE_KEY = 'sprite-theme';    // 精灵换装联动键
 
-  /* 面板的颜色变量（不含字体/尺寸/动画，那些不随主题变） */
-  const PANEL_THEMES = [
-    { // 奶黄包：暖奶油 + 珊瑚橙
-      '--bg': '#fff3e0', '--card': '#fffdf8', '--card-hover': '#ffffff', '--card-sunken': '#ffe6c2',
-      '--line': 'rgba(51,43,35,.10)', '--line-strong': 'rgba(51,43,35,.20)',
-      '--text': '#332b23', '--text-dim': '#8b7e6d', '--text-faint': '#b0a493',
-      '--accent': '#ff5c3a', '--accent-line': '#ff8a5c', '--accent-soft': 'rgba(255,92,58,.12)',
-      '--seal': '#ff5c3a', '--danger': '#e0482e', '--ok': '#2fbf8f',
-    },
-    { // 蜜桃：蜜桃粉 + 珊瑚红
-      '--bg': '#ffece6', '--card': '#fffaf7', '--card-hover': '#ffffff', '--card-sunken': '#ffddd2',
-      '--line': 'rgba(160,80,50,.12)', '--line-strong': 'rgba(160,80,50,.22)',
-      '--text': '#4a2f28', '--text-dim': '#8a6a5a', '--text-faint': '#b09888',
-      '--accent': '#ff6b5e', '--accent-line': '#ff8d82', '--accent-soft': 'rgba(255,107,94,.12)',
-      '--seal': '#ff6b5e', '--danger': '#e04838', '--ok': '#2fbf8f',
-    },
-    { // 薄荷：薄荷绿 + 深绿强调
-      '--bg': '#e8f7ef', '--card': '#f7fdf9', '--card-hover': '#ffffff', '--card-sunken': '#d6f0e2',
-      '--line': 'rgba(40,120,90,.12)', '--line-strong': 'rgba(40,120,90,.22)',
-      '--text': '#2f4a3e', '--text-dim': '#64806f', '--text-faint': '#8aa293',
-      '--accent': '#22b37f', '--accent-line': '#45d39a', '--accent-soft': 'rgba(34,179,127,.12)',
-      '--seal': '#22b37f', '--danger': '#e0482e', '--ok': '#1a9a6b',
-    },
-    { // 天空：天蓝 + 蓝强调
-      '--bg': '#e8f2fc', '--card': '#f8fbff', '--card-hover': '#ffffff', '--card-sunken': '#d6e8f8',
-      '--line': 'rgba(50,110,170,.12)', '--line-strong': 'rgba(50,110,170,.22)',
-      '--text': '#2f4052', '--text-dim': '#64788a', '--text-faint': '#8a9aab',
-      '--accent': '#3d8bfd', '--accent-line': '#66a5ff', '--accent-soft': 'rgba(61,139,253,.12)',
-      '--seal': '#3d8bfd', '--danger': '#e0482e', '--ok': '#2fbf8f',
-    },
-    { // 薰衣草：薰衣草紫 + 紫强调
-      '--bg': '#f3ecfb', '--card': '#fbf9fe', '--card-hover': '#ffffff', '--card-sunken': '#e8dcf6',
-      '--line': 'rgba(120,80,190,.12)', '--line-strong': 'rgba(120,80,190,.22)',
-      '--text': '#3e3350', '--text-dim': '#6f6486', '--text-faint': '#948aa8',
-      '--accent': '#8b5cf6', '--accent-line': '#a57bfa', '--accent-soft': 'rgba(139,92,246,.12)',
-      '--seal': '#8b5cf6', '--danger': '#e0482e', '--ok': '#2fbf8f',
-    },
+  /* 四套风格：id 对应 data-theme，swatch 给选择器画色块预览 */
+  const STYLES = [
+    { id: 'play',      name: '玩趣明快', swatch: ['#ff5c3a', '#ffd23f', '#5bd9a6'] },
+    { id: 'minimal',   name: '极致极简', swatch: ['#4f46e5', '#1a1a1a', '#fafafa'] },
+    { id: 'editorial', name: '杂志编辑', swatch: ['#b3402a', '#1a1a1a', '#faf6ee'] },
+    { id: 'dark',      name: '暗夜',     swatch: ['#6ea8fe', '#ececf1', '#16161c'] },
   ];
 
-  function applyTheme(idx) {
-    const theme = PANEL_THEMES[idx];
-    if (!theme) return;
-    const root = document.documentElement.style;
-    Object.entries(theme).forEach(([k, v]) => root.setProperty(k, v));
+  function styleById(id) {
+    return STYLES.find((s) => s.id === id) || STYLES[0];
   }
 
-  function readIndex() {
-    let idx = parseInt(localStorage.getItem(THEME_KEY) || '0', 10);
-    return PANEL_THEMES[idx] ? idx : 0;
+  function applyStyle(id) {
+    const style = styleById(id);
+    document.documentElement.setAttribute('data-theme', style.id);
+    syncMenu(style.id);
   }
 
-  // 启动时应用当前主题
-  applyTheme(readIndex());
+  /* 读启动风格：panel-theme > sprite-theme（映射）> play */
+  function readStyle() {
+    try {
+      const own = localStorage.getItem(THEME_KEY);
+      if (own && styleById(own).id === own) return own;
 
-  // 精灵换装 → localStorage 变化 → storage 事件跨窗口触发 → 面板跟着换
+      const sprite = parseInt(localStorage.getItem(SPRITE_KEY) || '', 10);
+      if (!Number.isNaN(sprite) && sprite >= 0) {
+        return STYLES[sprite % STYLES.length].id;
+      }
+    } catch (err) { /* 隐私模式读不到就回默认 */ }
+    return 'play';
+  }
+
+  /* 选择器菜单的选中态 */
+  function syncMenu(id) {
+    document.querySelectorAll('.theme-option').forEach((btn) => {
+      const active = btn.dataset.theme === id;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  /* 初始化：注入选择器菜单（HTML 由 index.html 提供静态结构，这里补绑定） */
+  function initPicker() {
+    const toggle = document.getElementById('themeToggle');
+    const menu = document.getElementById('themeMenu');
+    if (!toggle || !menu) return;
+
+    const close = () => {
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', () => {
+      const willOpen = menu.hidden;
+      menu.hidden = !willOpen;
+      toggle.setAttribute('aria-expanded', String(willOpen));
+    });
+
+    menu.addEventListener('click', (event) => {
+      const opt = event.target.closest('.theme-option');
+      if (!opt) return;
+      const id = opt.dataset.theme;
+      try { localStorage.setItem(THEME_KEY, id); } catch (err) { /* 忽略 */ }
+      applyStyle(id);
+      close();
+    });
+
+    // 点别处收起
+    document.addEventListener('click', (event) => {
+      if (!menu.hidden && !menu.contains(event.target) && !toggle.contains(event.target)) {
+        close();
+      }
+    });
+
+    // Esc 收起
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !menu.hidden) close();
+    });
+  }
+
+  // 启动：应用当前风格 + 绑定选择器
+  applyStyle(readStyle());
+  initPicker();
+
+  // 精灵换装 → storage 事件跨窗口触发。只在用户没手动选过时跟随。
   window.addEventListener('storage', (event) => {
-    if (event.key !== THEME_KEY) return;
+    if (event.key !== SPRITE_KEY) return;
+    let own = false;
+    try { own = !!localStorage.getItem(THEME_KEY); } catch (err) { /* 忽略 */ }
+    if (own) return;
     const idx = parseInt(event.newValue, 10);
-    if (PANEL_THEMES[idx]) applyTheme(idx);
+    if (!Number.isNaN(idx) && idx >= 0) {
+      applyStyle(STYLES[idx % STYLES.length].id);
+    }
   });
 })();

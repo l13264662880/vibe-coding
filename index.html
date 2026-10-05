@@ -22,15 +22,48 @@
   <main class="app">
 
     <header class="app-header">
-      <h1>先做哪件</h1>
-      <p class="app-sub">知所先后，则近道矣</p>
-      <!-- 彩色圆点 logo：三色圆点象征「排个先后」。纯装饰，不进无障碍树 -->
-      <svg class="seal" viewBox="0 0 40 40" aria-hidden="true">
-        <rect width="40" height="40" rx="12" fill="#FFD23F"/>
-        <circle cx="14" cy="14" r="4.5" fill="#FF5C3A"/>
-        <circle cx="26" cy="14" r="4.5" fill="#5BD9A6"/>
-        <circle cx="20" cy="26" r="4.5" fill="#7CC4FF"/>
-      </svg>
+      <div class="brand">
+        <!-- 彩色圆点 logo：三色圆点象征「排个先后」。纯装饰，不进无障碍树 -->
+        <svg class="seal" viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="12" fill="#FFD23F"/>
+          <circle cx="14" cy="14" r="4.5" fill="#FF5C3A"/>
+          <circle cx="26" cy="14" r="4.5" fill="#5BD9A6"/>
+          <circle cx="20" cy="26" r="4.5" fill="#7CC4FF"/>
+        </svg>
+        <div>
+          <h1>先做哪件</h1>
+          <p class="app-sub">知所先后，则近道矣</p>
+        </div>
+      </div>
+
+      <!-- 主题选择器：切换四套风格 -->
+      <div class="theme-picker">
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换主题" aria-expanded="false" aria-haspopup="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.6 1.5-1.5 0-.4-.2-.8-.4-1.1-.2-.3-.3-.6-.3-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"/>
+          </svg>
+        </button>
+        <div class="theme-menu" id="themeMenu" hidden>
+          <span class="theme-menu-title">选择风格</span>
+          <button type="button" class="theme-option" data-theme="play" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#ff5c3a"></i><i style="background:#ffd23f"></i><i style="background:#5bd9a6"></i></span>
+            <span class="theme-name">玩趣明快</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="minimal" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#4f46e5"></i><i style="background:#1a1a1a"></i><i style="background:#fafafa"></i></span>
+            <span class="theme-name">极致极简</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="editorial" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#b3402a"></i><i style="background:#1a1a1a"></i><i style="background:#faf6ee"></i></span>
+            <span class="theme-name">杂志编辑</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="dark" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#6ea8fe"></i><i style="background:#ececf1"></i><i style="background:#16161c"></i></span>
+            <span class="theme-name">暗夜</span><span class="theme-check">✓</span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <!-- 视图导航（Day 13）：三个视图互切，hash 路由 #/todo #/pomodoro #/mood -->
