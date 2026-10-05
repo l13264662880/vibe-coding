@@ -117,14 +117,31 @@
      把「数据从哪来」抽成一层：今天走 mock（mock-data.js），Day 23 换成 fetch 真实 API。
      四种状态：加载中 loading / 有数据 content（就是列表）/ 空 empty / 出错 error。 */
 
-  const DATA_SOURCE = 'mock'; // Day 23 改成 'api'
+  const DATA_SOURCE = 'api'; // Day 17 接真实接口（原计划 Day 23，因 Day 15 加后端提前）
+  const API_BASE = 'https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com';
 
   function loadFromSource() {
-    if (DATA_SOURCE === 'mock') {
-      return window.MockData.loadTasks(); // Promise，行为等同 fetch
+    if (DATA_SOURCE === 'api') {
+      // 调 /api/tasks 读真实数据；字段对齐前端任务对象：
+      //   接口返回 {ok, data:[{id,text,position,done,due,estimate}]}
+      //   前端任务对象是 {id,text,done,due,estimate}，position 去掉（数组顺序即优先级）
+      return fetch(`${API_BASE}/api/tasks`)
+        .then((r) => {
+          if (!r.ok) throw new Error(`接口返回 ${r.status}`);
+          return r.json();
+        })
+        .then((payload) => {
+          if (!payload.ok) throw new Error('接口返回异常');
+          return (payload.data || []).map((t) => ({
+            id: t.id,
+            text: t.text,
+            done: !!t.done,
+            due: t.due || null,
+            estimate: t.estimate || null,
+          }));
+        });
     }
-    // Day 23 换成：return fetch('/api/tasks').then(r => r.json())
-    return Promise.resolve(readLocal());
+    return window.MockData.loadTasks(); // mock 兜底（?scenario= 演示态用）
   }
 
   /* 只负责 loading / error 两个容器的显隐；空和有数据由 render() 说了算 */
@@ -163,6 +180,21 @@
       try {
         const initial = await loadFromSource();
         tasks = initial;
+        showState('ready');
+        render();
+      } catch (err) {
+        console.warn('加载任务失败：', err);
+        showState('error');
+      }
+      return;
+    }
+
+    // Day 17：api 模式优先从接口读真实数据，不再走 mock / localStorage。
+    // 写操作（增删改）暂时仍只改本地，Day 18 接写接口后再同步到后端。
+    if (DATA_SOURCE === 'api') {
+      showState('loading');
+      try {
+        tasks = await loadFromSource();
         showState('ready');
         render();
       } catch (err) {

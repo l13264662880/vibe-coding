@@ -89,6 +89,7 @@ HTTP 云函数**不会自动注入凭据**（普通事件函数才会），必�
 | `functions/api-tasks/scf_bootstrap` | Day 17 新增 |
 | `cloudbaserc.json` | Day 17 改（加 api-tasks 函数 + envVariables 引用） |
 | `api-contract.md` | Day 17 改（补两个读接口的契约） |
+| `app.js` | Day 17 改（板块②接数据：`DATA_SOURCE` 改 `api`，从 `/api/tasks` 读真实数据） |
 
 ## 六｜安全红线（本次执行遵守）
 
@@ -103,3 +104,38 @@ HTTP 云函数**不会自动注入凭据**（普通事件函数才会），必�
 - 写接口要同时写 `task_events`（Day 16 建的事件表）
 - 拖拽改 `position` 时注意「部分唯一索引」的临时冲突（Day 16 已记录）
 - 两表目前无 RLS，多用户前必须补（Day 16 第八节）
+
+## 八｜前端接数据（板块②「同步任务」）
+
+> 补记：Day 17 板块②「接数据（同步任务）」= 让前端页面调用 `/api/tasks` 显示真实数据，替换 mock。
+
+### 改了什么
+
+`app.js` 里两处：
+
+1. `DATA_SOURCE = 'mock'` → `'api'`，新增 `API_BASE` 常量（接口公网基址）
+2. `loadFromSource()` 加 api 分支：`fetch('/api/tasks')` → 取 `payload.data` → 去掉 `position` 字段（前端靠数组顺序表达优先级），映射成前端任务对象 `{id, text, done, due, estimate}`
+3. `bootstrap()` 加 api 分支：优先从接口读真实数据，不再走 mock / localStorage
+
+### 字段映射（接口 → 前端）
+
+| 接口返回 | 前端任务对象 | 处理 |
+| --- | --- | --- |
+| `id`（数字） | `id` | 保留 |
+| `text` | `text` | 保留 |
+| `position` | （无） | **去掉**，数组顺序即优先级 |
+| `done` | `done` | 保留（`!!done` 归一化） |
+| `due` | `due` | 保留（`|| null`） |
+| `estimate` | `estimate` | 保留（`|| null`） |
+
+### 边界说明
+
+- **写操作（增删改）暂时仍只改本地 localStorage**，Day 18 接写接口后再同步到后端。
+- 前端和接口是不同域名（`tcloudbaseapp.com` vs `service.tcloudbase.com`），但接口 CORS 已允许前端域名，跨域 fetch 正常。
+- 静态托管默认域名有「风险提醒」中间页，第一次打开要点「确定访问」——截图脚本里已处理（点按钮 + 重载）。
+
+### 验证结果
+
+- 前端页面渲染出真实数据：「第一件事」显示「复习高数第三章」，列表显示 7 条真实任务（含「写完 Day 16 的建表笔记」等）
+- `/api/tasks` 网络请求 200，console 无报错
+- 已重新部署到静态托管 `https://yuanjian-d5gdhcntg91022662-1500297151.tcloudbaseapp.com/`

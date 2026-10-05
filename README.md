@@ -29,6 +29,7 @@
 | `day16-db.md` | Day 16 | Day 16 记录：两张表各存什么、靠`task_id` 关联、三个约束的实测报错 |
 | `functions/api-tasks/` | Day 17 | HTTP 云函数 `/api/tasks` 读接口（全部任务 + 第一件事，走 REST 网关读 PG） |
 | `day17-read-api.md` | Day 17 | Day 17 记录：接口映射、REST 网关 + API Key 的技术路径、验证结果 |
+| `app.js` | Day 7–13 / Day 17 | 全部逻辑。Day 17 板块②接数据：`DATA_SOURCE` 改 `api`，从 `/api/tasks` 读真实数据替换 mock |
 | `.workbuddy/skills/筛选交互检查/SKILL.md` | Day 12 | 筛选检查 Skill：frontmatter（name + description）+ 三条筛选验证清单 |
 | `.workbuddy/skills/筛选交互检查/调用记录.md` | Day 12 | Skill 真实调用记录：三种筛选情况（有结果/无结果/清空恢复）实测全通过 |
 | `.env`（本地） | Day 2 | **本地文件，已被忽略，永远不会出现在 GitHub 上**（Day 23 才会真正用到） |
