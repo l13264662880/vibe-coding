@@ -1,6 +1,6 @@
 # vibe-coding
 
-一个从零搭起来的网站项目。**当前进度：Day 13 → 三视图可切换 + 列表四种状态已完成**。
+一个从零搭起来的网站项目。**当前进度：Day 16 → 数据模型设计 + 建表 + 种子已完成**。
 
 **产品名**：先做哪件 —— 一个强制排序的待办小工具。所有任务排在一条唯一的队列里，**位置就是优先级**，第 1 名永远只有一个。
 
@@ -20,6 +20,13 @@
 | `PRD.md` | Day 4 / Day 7 | 产品需求文档：8 项 MVP 功能、砍功能清单及理由、10 条可打勾验收标准。Day 7 补了第 6.1 节「预排序」的排队记录 |
 | `TECH_DESIGN.md` | Day 5 | 技术方案：数据流一句话、前后端/数据库分工、技术路线（纯前端）+ 理由、桌面形态规划 |
 | `data-flow.svg` | Day 5 | 数据流图：数据从哪来、到哪去（可直接打开截图） |
+| `api-contract.md` | Day 15 | 接口契约：前后端唯一约定（当前只有 `/api/health`），业务接口 Day 16–22 再补 |
+| `day15-cloudbase.md` | Day 15 | CloudBase 环境信息：环境 ID、套餐能力、续期时间、安全红线、各环节用在哪天 |
+| `cloudbaserc.json` | Day 15 | CloudBase CLI 配置：环境 ID + 云函数声明 |
+| `functions/api-health/` | Day 15 | HTTP 云函数 `/api/health`（`index.js` + `scf_bootstrap`，监听 9000 端口） |
+| `db/schema.sql` | Day 16 | 建表脚本：`tasks`（核心表）+ `task_events`（事件表），含索引、触发器、全部字段注释（幂等） |
+| `db/seed.sql` | Day 16 | 种子脚本：8 行 tasks + 12 行 task_events + 4 条验证查询（幂等，重复执行不报错） |
+| `day16-db.md` | Day 16 | Day 16 记录：两张表各存什么、靠`task_id` 关联、三个约束的实测报错 |
 | `.workbuddy/skills/筛选交互检查/SKILL.md` | Day 12 | 筛选检查 Skill：frontmatter（name + description）+ 三条筛选验证清单 |
 | `.workbuddy/skills/筛选交互检查/调用记录.md` | Day 12 | Skill 真实调用记录：三种筛选情况（有结果/无结果/清空恢复）实测全通过 |
 | `.env`（本地） | Day 2 | **本地文件，已被忽略，永远不会出现在 GitHub 上**（Day 23 才会真正用到） |
@@ -64,6 +71,11 @@ py -m http.server 8000
 - [x] Day 11 — **交互反馈**：复制 / 完成 / 排序三个交互补上「生效了」提示
 - [x] Day 12 — **筛选功能 + Skill**：状态 tab + 搜索框；创建并调用「筛选交互检查」Skill，三种情况实测通过
 - [x] Day 13 — **三视图 + 四状态**：待办/番茄/心情三视图 hash 路由切换；列表空/加载/错误/正常四种状态（`?scenario=` 参数演示）
+- [x] Day 14 — 真人测试全流程通过 + 窄屏拆字最小修复
+- [x] Day 15 — **后端接入**：接 CloudBase 免费体验版（PostgreSQL 数据库），部署 `/api/health` HTTP 云函数 + 前端 mock 版上线 + 接口契约
+- [x] Day 16 — **数据模型 + 建表**：`tasks`（核心表）+ `task_events`（事件表，靠 `task_id` 外键一对多关联），种子脚本 8+12 行，select 与约束实测全通过
+- [ ] Day 17 — 读接口（`/api/tasks`，只依赖 `tasks` 表）
+- [ ] Day 18 — 写接口
 - [ ] Day 23 — 接数据库，用上 `.env`
 
 ## 视觉说明（Day 7）

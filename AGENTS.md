@@ -4,8 +4,8 @@
 
 ## 项目信息
 - 项目名：vibe-coding
-- 当前阶段：第 2 周 · Day 13（拆三视图可切换 + 列表四种状态）
-- 技术栈：纯前端单页 —— HTML + CSS + 原生 JS + 浏览器 localStorage（Day 5 定稿）
+- 当前阶段：第 3 周 · Day 16（数据模型设计 + PostgreSQL 建表 + 种子）
+- 技术栈：前端纯前端单页（HTML + CSS + 原生JS + localStorage）＋ 后端 CloudBase 免费体验版（Serverless PostgreSQL + HTTP 云函数）。前端路线 Day 5 定稿，Day 15起接后端
 - 负责人：学员本人
 
 ## 给 AI 的硬规则（每次动手前必读）
@@ -41,4 +41,9 @@
 - Day 11：三个交互补上「生效了」反馈：复制 / 完成 / 排序。（已完成）
 - Day 12：筛选功能（状态 tab + 搜索框）+ 创建并调用 Skill 验证筛选交互。（已完成）
 - Day 13：拆三视图（待办/番茄/心情）可切换（hash 路由 #/todo #/pomodoro #/mood）+ 列表四种状态（空/加载/错误/正常）。（已完成）
-- Day 23：接数据库，届时才用上 `.env`。
+- Day 14：真人测试全流程 + 窄屏拆字最小修复。（已完成）
+- Day 15：接后端 —— CloudBase 免费体验版环境`yuanjian-d5gdhcntg91022662`（PostgreSQL 数据库）、`/api/health` HTTP 云函数、前端 mock 版静态托管、接口契约 `api-contract.md`。（已完成）
+- Day 16：数据模型设计 + 建表 + 种子 + select 验证。两张表：`tasks`（核心表，Day 17 读接口只依赖它）+ `task_events`（事件表，靠 `task_id` 外键一对多关联）。脚本在 `db/schema.sql`、`db/seed.sql`，记录见 `day16-db.md`。（已完成）
+- Day 17：读接口，只依赖 `tasks` 一张表。
+- Day 18：写接口，写数据时记得同时写 `task_events`。
+- Day 23：接数据库（`.env` 真正用上；表结构 Day 16 已建好，Day 23 主要是配置与迁移）。
