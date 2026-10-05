@@ -3,8 +3,10 @@
  * 精灵换装时会把主题序号写进 localStorage（键 sprite-theme），
  * 这里监听 storage 事件，精灵一换装，面板立刻换成同一套配色。
  * 面板的主题和精灵的 5 套一一对应（奶黄包/蜜桃/薄荷/天空/薰衣草）。
+ *
+ * 玩趣明快重设计：5 套配色改成「柔和奶油底 + 明快强调色」，
+ * 变量名保持不变，只换颜色值。
  */
-
 (() => {
   'use strict';
 
@@ -12,40 +14,40 @@
 
   /* 面板的颜色变量（不含字体/尺寸/动画，那些不随主题变） */
   const PANEL_THEMES = [
-    { // 奶黄包
-      '--bg': '#fdf6e3', '--card': '#fffdf6', '--card-hover': '#ffffff', '--card-sunken': '#faf1dc',
-      '--line': 'rgba(180,130,40,.16)', '--line-strong': 'rgba(180,130,40,.3)',
-      '--text': '#4a3525', '--text-dim': '#8a7355', '--text-faint': '#a58a66',
-      '--accent': '#d99a2b', '--accent-line': '#e8b34a', '--accent-soft': 'rgba(232,179,74,.14)',
-      '--seal': '#e88a6a', '--danger': '#e07a62', '--ok': '#b8860b',
+    { // 奶黄包：暖奶油 + 珊瑚橙
+      '--bg': '#fff3e0', '--card': '#fffdf8', '--card-hover': '#ffffff', '--card-sunken': '#ffe6c2',
+      '--line': 'rgba(51,43,35,.10)', '--line-strong': 'rgba(51,43,35,.20)',
+      '--text': '#332b23', '--text-dim': '#8b7e6d', '--text-faint': '#b0a493',
+      '--accent': '#ff5c3a', '--accent-line': '#ff8a5c', '--accent-soft': 'rgba(255,92,58,.12)',
+      '--seal': '#ff5c3a', '--danger': '#e0482e', '--ok': '#2fbf8f',
     },
-    { // 蜜桃
-      '--bg': '#fdeee8', '--card': '#fffaf4', '--card-hover': '#ffffff', '--card-sunken': '#fbe8de',
-      '--line': 'rgba(220,130,100,.16)', '--line-strong': 'rgba(220,130,100,.3)',
-      '--text': '#4a3328', '--text-dim': '#8a6a5a', '--text-faint': '#a58a76',
-      '--accent': '#e88a6a', '--accent-line': '#f0a080', '--accent-soft': 'rgba(232,138,106,.14)',
-      '--seal': '#e07a62', '--danger': '#d06048', '--ok': '#c8785a',
+    { // 蜜桃：蜜桃粉 + 珊瑚红
+      '--bg': '#ffece6', '--card': '#fffaf7', '--card-hover': '#ffffff', '--card-sunken': '#ffddd2',
+      '--line': 'rgba(160,80,50,.12)', '--line-strong': 'rgba(160,80,50,.22)',
+      '--text': '#4a2f28', '--text-dim': '#8a6a5a', '--text-faint': '#b09888',
+      '--accent': '#ff6b5e', '--accent-line': '#ff8d82', '--accent-soft': 'rgba(255,107,94,.12)',
+      '--seal': '#ff6b5e', '--danger': '#e04838', '--ok': '#2fbf8f',
     },
-    { // 薄荷
-      '--bg': '#edf7f0', '--card': '#f6fdf8', '--card-hover': '#ffffff', '--card-sunken': '#e4f2e8',
-      '--line': 'rgba(80,150,120,.16)', '--line-strong': 'rgba(80,150,120,.3)',
-      '--text': '#3a4a40', '--text-dim': '#6a8072', '--text-faint': '#8aa090',
-      '--accent': '#4e9a74', '--accent-line': '#5bb87e', '--accent-soft': 'rgba(78,154,116,.14)',
-      '--seal': '#5bb87e', '--danger': '#d06048', '--ok': '#3e8a68',
+    { // 薄荷：薄荷绿 + 深绿强调
+      '--bg': '#e8f7ef', '--card': '#f7fdf9', '--card-hover': '#ffffff', '--card-sunken': '#d6f0e2',
+      '--line': 'rgba(40,120,90,.12)', '--line-strong': 'rgba(40,120,90,.22)',
+      '--text': '#2f4a3e', '--text-dim': '#64806f', '--text-faint': '#8aa293',
+      '--accent': '#22b37f', '--accent-line': '#45d39a', '--accent-soft': 'rgba(34,179,127,.12)',
+      '--seal': '#22b37f', '--danger': '#e0482e', '--ok': '#1a9a6b',
     },
-    { // 天空
-      '--bg': '#edf4fb', '--card': '#f8fbfe', '--card-hover': '#ffffff', '--card-sunken': '#e4eef8',
-      '--line': 'rgba(90,140,190,.16)', '--line-strong': 'rgba(90,140,190,.3)',
-      '--text': '#3a4a58', '--text-dim': '#6a7a88', '--text-faint': '#8a9aa8',
-      '--accent': '#5a90c0', '--accent-line': '#6aa0d0', '--accent-soft': 'rgba(90,144,192,.14)',
-      '--seal': '#4a80b0', '--danger': '#d06048', '--ok': '#4a80b0',
+    { // 天空：天蓝 + 蓝强调
+      '--bg': '#e8f2fc', '--card': '#f8fbff', '--card-hover': '#ffffff', '--card-sunken': '#d6e8f8',
+      '--line': 'rgba(50,110,170,.12)', '--line-strong': 'rgba(50,110,170,.22)',
+      '--text': '#2f4052', '--text-dim': '#64788a', '--text-faint': '#8a9aab',
+      '--accent': '#3d8bfd', '--accent-line': '#66a5ff', '--accent-soft': 'rgba(61,139,253,.12)',
+      '--seal': '#3d8bfd', '--danger': '#e0482e', '--ok': '#2fbf8f',
     },
-    { // 薰衣草
-      '--bg': '#f3eefb', '--card': '#fbf8fe', '--card-hover': '#ffffff', '--card-sunken': '#ece4f8',
-      '--line': 'rgba(150,110,200,.16)', '--line-strong': 'rgba(150,110,200,.3)',
-      '--text': '#433a54', '--text-dim': '#746a88', '--text-faint': '#948aa8',
-      '--accent': '#9a6cd0', '--accent-line': '#aa7ce0', '--accent-soft': 'rgba(154,108,208,.14)',
-      '--seal': '#7a5ab0', '--danger': '#d06048', '--ok': '#7a5ab0',
+    { // 薰衣草：薰衣草紫 + 紫强调
+      '--bg': '#f3ecfb', '--card': '#fbf9fe', '--card-hover': '#ffffff', '--card-sunken': '#e8dcf6',
+      '--line': 'rgba(120,80,190,.12)', '--line-strong': 'rgba(120,80,190,.22)',
+      '--text': '#3e3350', '--text-dim': '#6f6486', '--text-faint': '#948aa8',
+      '--accent': '#8b5cf6', '--accent-line': '#a57bfa', '--accent-soft': 'rgba(139,92,246,.12)',
+      '--seal': '#8b5cf6', '--danger': '#e0482e', '--ok': '#2fbf8f',
     },
   ];
 
