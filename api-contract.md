@@ -145,11 +145,63 @@ curl "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks/first"
 
 ---
 
-## 4. 错误约定（读接口通用）
+## 4. 新增任务 `POST /api/tasks`
+
+> Day 18 新增。添加一条任务，返回新任务对象。
+
+| 项 | 值 |
+| --- | --- |
+| 方法 | `POST` |
+| 路径 | `/api/tasks` |
+| 鉴权 | 无（公开） |
+| 请求体 | JSON：`text`（必填）、`due`（可选）、`estimate`（可选） |
+
+### 4.1 请求体
+
+```json
+{ "text": "给爸爸买生日礼物", "due": "2026-10-12", "estimate": 60 }
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `text` | string | 是 | 任务文字，trim 后不能为空 |
+| `due` | string (date) | 否 | 截止日期，`YYYY-MM-DD` |
+| `estimate` | integer | 否 | 预估耗时（分钟），`>= 0` |
+
+### 4.2 成功响应（HTTP 200）
+
+```json
+{
+  "ok": true,
+  "data": { "id": 13, "text": "给爸爸买生日礼物", "position": 9, "done": false, "due": "2026-10-12", "estimate": 60 }
+}
+```
+
+`data` 是新任务对象，字段与读接口一致；`position` 自动取「当前最大 position + 1」（新任务加到列表末尾）。
+
+### 4.3 错误响应
+
+| 场景 | 状态码 | 返回 |
+| --- | --- | --- |
+| 缺 `text` / `text` 纯空白 | `400` | `{ "ok": false, "error": "任务内容不能为空" }` |
+| 相同 `text` 的未删除任务已存在 | `409` | `{ "ok": false, "error": "这个任务已经存在了" }` |
+| 请求体不是合法 JSON | `400` | `{ "ok": false, "error": "请求体不是合法的 JSON" }` |
+
+### 4.4 调用示例
+
+```bash
+curl -X POST "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"给爸爸买生日礼物","due":"2026-10-12","estimate":60}'
+```
+
+---
+
+## 5. 错误约定（读写通用）
 
 | 场景 | 状态码 | 说明 |
 | --- | --- | --- |
 | 路径不存在 | `404` | 请求了 `/api/tasks`、`/api/tasks/first` 以外的路径 |
-| 非 GET 方法 | `405` | 只支持 GET（写接口 Day 18 才做） |
+| 方法不支持 | `405` | 只支持 GET 和 POST（PATCH/DELETE 第 4 周才做） |
 | 服务内部异常 | `500` | 云函数或数据库网关出错 |
 

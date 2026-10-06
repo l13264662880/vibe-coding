@@ -1,6 +1,6 @@
 # vibe-coding
 
-一个从零搭起来的网站项目。**当前进度：Day 17 → GET 读接口已完成**。
+一个从零搭起来的网站项目。**当前进度：Day 18 → POST 写接口已完成**。
 
 **产品名**：智伴 PriorityPal —— 一个强制排序的待办小工具。所有任务排在一条唯一的队列里，**位置就是优先级**，第 1 名永远只有一个。
 
@@ -27,8 +27,9 @@
 | `db/schema.sql` | Day 16 | 建表脚本：`tasks`（核心表）+ `task_events`（事件表），含索引、触发器、全部字段注释（幂等） |
 | `db/seed.sql` | Day 16 | 种子脚本：8 行 tasks + 12 行 task_events + 4 条验证查询（幂等，重复执行不报错） |
 | `day16-db.md` | Day 16 | Day 16 记录：两张表各存什么、靠`task_id` 关联、三个约束的实测报错 |
-| `functions/api-tasks/` | Day 17 | HTTP 云函数 `/api/tasks` 读接口（全部任务 + 第一件事，走 REST 网关读 PG） |
+| `functions/api-tasks/` | Day 17 / 18 | HTTP 云函数 `/api/tasks`（读接口 + POST 新增，走 REST 网关读写 PG） |
 | `day17-read-api.md` | Day 17 | Day 17 记录：接口映射、REST 网关 + API Key 的技术路径、验证结果 |
+| `day18-post-api.md` | Day 18 | Day 18 记录：POST 接口、防重复/防空校验、PostgREST 插入语法、验证结果 |
 | `app.js` | Day 7–13 / Day 17 | 全部逻辑。Day 17 板块②接数据：`DATA_SOURCE` 改 `api`，从 `/api/tasks` 读真实数据替换 mock |
 | `.workbuddy/skills/筛选交互检查/SKILL.md` | Day 12 | 筛选检查 Skill：frontmatter（name + description）+ 三条筛选验证清单 |
 | `.workbuddy/skills/筛选交互检查/调用记录.md` | Day 12 | Skill 真实调用记录：三种筛选情况（有结果/无结果/清空恢复）实测全通过 |
@@ -78,7 +79,8 @@ py -m http.server 8000
 - [x] Day 15 — **后端接入**：接 CloudBase 免费体验版（PostgreSQL 数据库），部署 `/api/health` HTTP 云函数 + 前端 mock 版上线 + 接口契约
 - [x] Day 16 — **数据模型 + 建表**：`tasks`（核心表）+ `task_events`（事件表，靠 `task_id` 外键一对多关联），种子脚本 8+12 行，select 与约束实测全通过
 - [x] Day 17 — **GET 读接口**：`/api/tasks`（全部任务）+ `/api/tasks/first`（第一件事），走 REST 网关读 PG，公网实测通过
-- [ ] Day 18 — 写接口（业务写入，同时写 `task_events`）
+- [x] Day 18 — **POST 写接口**：`/api/tasks` 新增任务，防重复提交 + 防空文本校验，同步写 `task_events`，公网实测通过
+- [ ] Day 19 — 接前端写操作（增删改同步到后端）
 - [ ] Day 23 — 接数据库，用上 `.env`
 
 ## 视觉说明（Day 7）
