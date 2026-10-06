@@ -891,6 +891,7 @@ button:focus-visible {
 
 .theme-picker { position: relative; flex: none; }
 .theme-toggle {
+  position: relative;
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -906,6 +907,17 @@ button:focus-visible {
 }
 .theme-toggle:hover { transform: translateY(-2px); color: var(--accent); }
 .theme-toggle svg { width: 20px; height: 20px; }
+/* 右下角小色点：显示当前主题的主色，一眼看出选的是哪套 */
+.theme-dot {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--card);
+  background: var(--accent);
+}
 
 .theme-menu {
   position: absolute;
@@ -922,6 +934,11 @@ button:focus-visible {
   z-index: 30;
 }
 .theme-menu[hidden] { display: none; }
+.theme-menu:not([hidden]) { animation: menu-in 240ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
 .theme-menu-title {
   display: block;
   padding: 4px 10px 8px;

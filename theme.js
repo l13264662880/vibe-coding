@@ -38,6 +38,9 @@
   function applyStyle(id) {
     const style = styleById(id);
     document.documentElement.setAttribute('data-theme', style.id);
+    // 调色板按钮上的小色点：一眼看出当前是哪套
+    const dot = document.querySelector('.theme-toggle .theme-dot');
+    if (dot) dot.style.background = style.swatch[0];
     syncMenu(style.id);
   }
 
@@ -52,6 +55,12 @@
         return STYLES[sprite % STYLES.length].id;
       }
     } catch (err) { /* 隐私模式读不到就回默认 */ }
+    // 没有任何手动/联动偏好时：跟随系统深色模式（首次打开更聪明）
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+    } catch (err) { /* 忽略 */ }
     return 'play';
   }
 
@@ -108,6 +117,9 @@
   initPicker();
 
   // 精灵换装 → storage 事件跨窗口触发。只在用户没手动选过时跟随。
+  // ⚠️ 局限：storage 事件只在同源窗口间触发。Electron 面板与本应用同源时有效；
+  // 网页版部署在云端域名下时，与本地 Electron 不同源，此联动收不到——
+  // 三端真正联动需要后端同步主题状态，当前未实现。
   window.addEventListener('storage', (event) => {
     if (event.key !== SPRITE_KEY) return;
     let own = false;
