@@ -119,6 +119,45 @@ curl "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks?limit=
 
 > Day 17 新增。返回「第一件事」：第 1 位**未完成**、未删除的任务（产品的核心问题「先做哪件」的答案）。
 
+## /api/theme —— 主题跨端同步（Day 18 新增）
+
+主题状态要在 网页版 / 桌面面板 / 桌面精灵 三端保持一致，而三端互相不同源、
+localStorage 完全隔离，所以落在数据库 `app_state` 表（key-value，key='theme'）。
+
+### GET /api/theme
+
+读当前主题。`app_state` 无记录时返回默认值 `play`。
+
+响应：
+```json
+{ "ok": true, "data": { "theme": "play" } }
+```
+
+### POST /api/theme
+
+写入当前主题（upsert：`app_state` 主键 `key='theme'` 冲突时更新 value）。
+
+请求体：
+```json
+{ "theme": "dark" }
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `theme` | string | 必填，7 套主题 id 之一：`play / minimal / editorial / dark / nature / retro / luxe`，其他值 400 |
+
+响应：
+```json
+{ "ok": true, "data": { "theme": "dark" } }
+```
+
+### 同步语义
+
+- 「最后写入者胜」：任何一端选择/换装主题 → 立即 POST 本接口
+- 各端**启动时** GET 一次对齐（不做轮询——免费体验版的资源点扛不住轮询频率）；
+  其他端变更后，本端刷新页面即可同步，实时推送是后续课题
+- 云端不可达（离线）时静默失败，本地选择依然生效
+
 | 项 | 值 |
 | --- | --- |
 | 方法 | `GET` |

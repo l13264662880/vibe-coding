@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff3e0" />
+  <title>智伴 PriorityPal · 强制排序待办</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%239c3d34'/%3E%3Ctext x='50' y='52' font-size='62' text-anchor='middle' dominant-baseline='central' fill='%23fbfdfa' font-family='SimSun,serif'%3E%E5%85%88%3C/text%3E%3C/svg%3E" />
+  <!-- 字体：Fredoka（展示/数字）+ Nunito（正文），中文回落系统圆润黑体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 漂浮装饰圆点（玩趣明快氛围） -->
+  <div class="floaties" aria-hidden="true">
+    <span class="floaty"></span><span class="floaty"></span>
+    <span class="floaty"></span><span class="floaty"></span>
+  </div>
+
+  <main class="app">
+
+    <header class="app-header">
+      <div class="brand">
+        <!-- 彩色圆点 logo：三色圆点象征「排个先后」。纯装饰，不进无障碍树 -->
+        <svg class="seal" viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="12" fill="#FFD23F"/>
+          <circle cx="14" cy="14" r="4.5" fill="#FF5C3A"/>
+          <circle cx="26" cy="14" r="4.5" fill="#5BD9A6"/>
+          <circle cx="20" cy="26" r="4.5" fill="#7CC4FF"/>
+        </svg>
+        <div>
+          <h1>智伴 PriorityPal</h1>
+          <p class="app-sub">知所先后，则近道矣</p>
+        </div>
+      </div>
+
+      <!-- 主题选择器：切换四套风格 -->
+      <div class="theme-picker">
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换主题" aria-expanded="false" aria-haspopup="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.6 1.5-1.5 0-.4-.2-.8-.4-1.1-.2-.3-.3-.6-.3-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"/>
+          </svg>
+          <span class="theme-dot" aria-hidden="true"></span>
+        </button>
+        <div class="theme-menu" id="themeMenu" hidden>
+          <span class="theme-menu-title">选择风格</span>
+          <button type="button" class="theme-option" data-theme="play" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#ff5c3a"></i><i style="background:#ffd23f"></i><i style="background:#5bd9a6"></i></span>
+            <span class="theme-name">玩趣明快</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="minimal" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#4f46e5"></i><i style="background:#1a1a1a"></i><i style="background:#fafafa"></i></span>
+            <span class="theme-name">极致极简</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="editorial" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#b3402a"></i><i style="background:#1a1a1a"></i><i style="background:#faf6ee"></i></span>
+            <span class="theme-name">杂志编辑</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="dark" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#6ea8fe"></i><i style="background:#ececf1"></i><i style="background:#16161c"></i></span>
+            <span class="theme-name">暗夜</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="nature" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#7a9b6d"></i><i style="background:#c8b98a"></i><i style="background:#f4f1e6"></i></span>
+            <span class="theme-name">自然有机</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="retro" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#39ff88"></i><i style="background:#00e5ff"></i><i style="background:#0d0f0d"></i></span>
+            <span class="theme-name">复古未来</span><span class="theme-check">✓</span>
+          </button>
+          <button type="button" class="theme-option" data-theme="luxe" aria-pressed="false">
+            <span class="theme-swatch"><i style="background:#b8923f"></i><i style="background:#2a2520"></i><i style="background:#faf7f0"></i></span>
+            <span class="theme-name">轻奢雅致</span><span class="theme-check">✓</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 视图导航（Day 13）：三个视图互切，hash 路由 #/todo #/pomodoro #/mood -->
+    <nav class="view-nav" id="viewNav" aria-label="页面导航">
+      <a class="view-nav-item is-active" href="#/todo" data-view="todo" aria-current="page">待办</a>
+      <a class="view-nav-item" href="#/pomodoro" data-view="pomodoro">番茄</a>
+      <a class="view-nav-item" href="#/mood" data-view="mood">心情</a>
+    </nav>
+
+    <!-- ================= 待办视图（Day 13）================= -->
+    <section class="view" id="view-todo" data-view-panel="todo">
+
+      <!-- 第一件事：全局唯一的高亮区（PRD 验收标准第 3、4 条） -->
+      <section class="focus">
+        <span class="focus-label">现在最该做的</span>
+        <p class="focus-text is-empty" id="focusText">先加一件事</p>
+      </section>
+
+      <!-- 添加任务：输入一句话，回车加到队尾 -->
+      <form class="add-form" id="addForm">
+        <input
+          type="text"
+          id="taskInput"
+          placeholder="要做点什么？回车加到队尾"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <!-- AI 录入的实时识别提示：输入带「截止/时长」的话时显示，由 app.js 控制 -->
+        <p class="parse-hint" id="parseHint" hidden></p>
+      </form>
+
+      <!-- 筛选（Day 12）：状态 tab + 搜索框，先筛后排。三种情况：有结果/无结果/清空恢复 -->
+      <div class="filter-bar">
+        <div class="filter-tabs" id="filterTabs" role="tablist" aria-label="按状态筛选">
+          <button type="button" class="filter-tab is-active" data-filter="all" role="tab" aria-selected="true">全部</button>
+          <button type="button" class="filter-tab" data-filter="open" role="tab" aria-selected="false">进行中</button>
+          <button type="button" class="filter-tab" data-filter="done" role="tab" aria-selected="false">已完成</button>
+        </div>
+        <input
+          type="search"
+          class="filter-search"
+          id="filterSearch"
+          placeholder="搜索任务…"
+          aria-label="搜索任务"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <!-- 数量可感知：筛选生效时显示「共 N 条 · 匹配 M 条」 -->
+      <p class="filter-count" id="filterCount" aria-live="polite" hidden></p>
+
+      <!-- 智能排序：工具按截止时间给初始顺序当起点，用户仍可拖拽微调（预排序，不代排） -->
+      <div class="sort-bar">
+        <button type="button" class="sort-btn" id="sortBtn">按截止时间排序</button>
+      </div>
+
+      <!-- 任务列表：内容由 app.js 按数据源渲染（Day 8 起是 mock，Day 23 换真实 API） -->
+      <ul class="task-list" id="taskList"></ul>
+
+      <!-- 四种页面状态里，除了「有数据」（= 上面的列表），其余三种都在这：
+           加载中 / 空 / 出错，由 app.js 按状态切换显示与隐藏 -->
+      <div class="list-state" id="loadingState" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <p>正在加载任务…</p>
+      </div>
+
+      <div class="list-state list-state--error" id="errorState" hidden>
+        <p>任务加载失败了，可能是网络或数据出了点问题。</p>
+        <button type="button" class="sort-btn" id="retryBtn">重新加载</button>
+      </div>
+
+      <!-- 列表为空时显示（由 JS 控制显示与隐藏） -->
+      <p class="empty-hint" id="emptyHint" aria-live="polite" hidden>还没有任务。在上面输入一行字，按回车。</p>
+
+      <!-- 删除任务后出现的撤销入口（由 JS 控制） -->
+      <div class="undo-bar" id="undoBar" hidden>
+        <span id="undoText">已删除一条任务</span>
+        <button type="button" id="undoBtn">撤销</button>
+      </div>
+
+    </section>
+
+    <!-- ================= 番茄视图（Day 13）================= -->
+    <section class="view" id="view-pomodoro" data-view-panel="pomodoro" hidden>
+      <!-- 番茄专注：25 分钟专注 + 5 分钟休息，完成一次记一笔 -->
+      <div class="pomodoro">
+        <div class="pomodoro-head">
+          <span class="pomodoro-name">番茄专注</span>
+          <span class="pomodoro-phase" id="pomoPhase">待开始</span>
+        </div>
+        <div class="pomodoro-time" id="pomoTime">25:00</div>
+        <div class="pomodoro-actions">
+          <button type="button" class="pomo-btn" id="pomoToggle">开始</button>
+          <button type="button" class="pomo-btn" id="pomoReset">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 心情视图（Day 13）================= -->
+    <section class="view" id="view-mood" data-view-panel="mood" hidden>
+      <!-- 情绪记录：每日心情打卡 + 焦虑缓解呼吸引导 -->
+      <div class="mood">
+        <div class="mood-head">
+          <span class="mood-name">今日心情</span>
+        </div>
+        <div class="mood-options" id="moodOptions">
+          <button type="button" class="mood-btn" data-mood="高效">😄 高效</button>
+          <button type="button" class="mood-btn" data-mood="平静">😌 平静</button>
+          <button type="button" class="mood-btn" data-mood="低落">😔 低落</button>
+          <button type="button" class="mood-btn" data-mood="焦虑">😰 焦虑</button>
+        </div>
+        <p class="mood-hint" id="moodHint">今天状态如何？点一个记下来。</p>
+
+        <button type="button" class="breathe-toggle" id="breatheToggle">焦虑缓解 · 3 分钟呼吸</button>
+        <div class="breathe" id="breathe" hidden>
+          <div class="breathe-circle" id="breatheCircle"></div>
+          <p class="breathe-text" id="breatheText">吸气…</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 轻提示：操作生效后的短暂反馈（Day 11），由 app.js 控制显隐 -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="theme.js"></script>
+  <script src="parse.js"></script>
+  <script src="pomodoro.js"></script>
+  <script src="mood.js"></script>
+  <script src="mock-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

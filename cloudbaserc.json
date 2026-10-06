@@ -16,6 +16,15 @@
       "envVariables": {
         "CLOUDBASE_APIKEY": "{{env.CLOUDBASE_APIKEY}}"
       }
+    },
+    {
+      "name": "api-theme",
+      "timeout": 3,
+      "runtime": "Nodejs20.19",
+      "description": "/api/theme 主题跨端同步（GET 读 / POST upsert 写）",
+      "envVariables": {
+        "CLOUDBASE_APIKEY": "{{env.CLOUDBASE_APIKEY}}"
+      }
     }
   ]
 }

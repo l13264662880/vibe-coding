@@ -178,3 +178,45 @@ COMMENT ON COLUMN task_events.from_position IS '拖拽前位置，仅 reordered 
 COMMENT ON COLUMN task_events.to_position   IS '拖拽后位置，仅 reordered 事件有值';
 COMMENT ON COLUMN task_events.detail  IS '事件细节(JSONB)。例：编辑事件存 {"old":"旧文字","new":"新文字"}，其余事件为 NULL';
 COMMENT ON COLUMN task_events.occurred_at IS '事件发生时间，数据库自动记录';
+
+
+-- ---------------------------------------------------------------------
+-- 表 3：app_state —— 应用级状态（key-value），Day 18 加
+-- ---------------------------------------------------------------------
+-- 用途：跨端同步的「应用级设置」。
+--   第一条数据：key='theme'，value 是 7 套主题的 id
+--   （play / minimal / editorial / dark / nature / retro / luxe）。
+--
+-- 为什么需要这张表：主题状态要在 网页版（云端域名）、桌面精灵、桌面面板
+--   三个端之间保持一致，而这三端互相不同源、localStorage 完全隔离——
+--   唯一公用的存储就是这个数据库。
+--
+-- 设计成通用 key-value 而不是 theme 专表：
+--   以后再有「跨端同步的设置」（比如默认视图、语言），直接插一行，
+--   不用每次改表结构。
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS app_state (
+  key        TEXT        PRIMARY KEY,
+  value      TEXT        NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- updated_at 自动维护（和 tasks 同一套路：触发器盖时间戳）
+CREATE OR REPLACE FUNCTION app_state_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_app_state_updated_at ON app_state;
+
+CREATE TRIGGER trg_app_state_updated_at
+  BEFORE UPDATE ON app_state
+  FOR EACH ROW EXECUTE FUNCTION app_state_set_updated_at();
+
+COMMENT ON TABLE app_state         IS '应用级状态表：key-value 存跨端同步的设置（当前：theme=当前主题 id）';
+COMMENT ON COLUMN app_state.key    IS '状态键，如 theme';
+COMMENT ON COLUMN app_state.value  IS '状态值，theme 键存 7 套主题 id 之一';
+COMMENT ON COLUMN app_state.updated_at IS '最后更新时间，触发器自动维护';

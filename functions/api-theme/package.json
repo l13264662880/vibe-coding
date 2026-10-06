@@ -1,0 +1,6 @@
+{
+  "name": "api-theme",
+  "version": "1.0.0",
+  "description": "智伴 PriorityPal /api/theme 主题跨端同步云函数（GET 读 / POST upsert 写）",
+  "main": "index.js"
+}
