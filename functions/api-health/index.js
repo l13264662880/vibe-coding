@@ -9,7 +9,7 @@ const server = http.createServer((req, res) => {
   // 组装要返回的 JSON：回答「我活着，现在是几点」。
   const body = JSON.stringify({
     status: 'ok',                    // 约定状态字段：ok = 正常
-    service: '先做哪件',              // 标识产品
+    service: '智伴 PriorityPal',              // 标识产品
     time: new Date().toISOString(),  // 服务器当前时间（UTC）
   });
 
