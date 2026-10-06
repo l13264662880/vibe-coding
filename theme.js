@@ -20,12 +20,15 @@
   const THEME_KEY = 'panel-theme';      // 面板自己选的风格
   const SPRITE_KEY = 'sprite-theme';    // 精灵换装联动键
 
-  /* 四套风格：id 对应 data-theme，swatch 给选择器画色块预览 */
+  /* 七套风格：id 对应 data-theme，swatch 给选择器画色块预览 */
   const STYLES = [
     { id: 'play',      name: '玩趣明快', swatch: ['#ff5c3a', '#ffd23f', '#5bd9a6'] },
     { id: 'minimal',   name: '极致极简', swatch: ['#4f46e5', '#1a1a1a', '#fafafa'] },
     { id: 'editorial', name: '杂志编辑', swatch: ['#b3402a', '#1a1a1a', '#faf6ee'] },
     { id: 'dark',      name: '暗夜',     swatch: ['#6ea8fe', '#ececf1', '#16161c'] },
+    { id: 'nature',    name: '自然有机', swatch: ['#7a9b6d', '#c8b98a', '#f4f1e6'] },
+    { id: 'retro',     name: '复古未来', swatch: ['#39ff88', '#00e5ff', '#0d0f0d'] },
+    { id: 'luxe',      name: '轻奢雅致', swatch: ['#b8923f', '#2a2520', '#faf7f0'] },
   ];
 
   function styleById(id) {

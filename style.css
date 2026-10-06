@@ -912,6 +912,8 @@ button:focus-visible {
   top: 50px;
   right: 0;
   min-width: 184px;
+  max-height: 70vh;
+  overflow-y: auto;
   padding: 8px;
   background: var(--card);
   border: 1px solid var(--line-strong);
@@ -1210,3 +1212,181 @@ button:focus-visible {
 [data-theme="dark"] .task-index {
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.06);
 }
+
+/* ============================================================
+   风格 5：自然有机 Nature
+   亚麻米底、苔藓绿强调、大地色序号、纸质纹理、柔和圆角
+   ============================================================ */
+
+[data-theme="nature"] {
+  --bg: #f4f1e6;
+  --card: #fbfaf3;
+  --card-hover: #ffffff;
+  --card-sunken: #ece8d8;
+  --line: rgba(90, 100, 70, 0.14);
+  --line-strong: rgba(90, 100, 70, 0.26);
+  --text: #3a382f;
+  --text-dim: #7a7a68;
+  --text-soft: #6a6a58;
+  --text-faint: #aaa895;
+  --accent: #7a9b6d;
+  --accent-line: #94b287;
+  --accent-soft: rgba(122, 155, 109, 0.16);
+  --seal: #7a9b6d;
+  --danger: #c46a5a;
+  --ok: #5a9b6d;
+  --rank-1: #d8c99a;
+  --rank-2: #a9c39a;
+  --rank-3: #d4a98a;
+  --rank-4: #b8c9a8;
+  --rank-5: #c9bfa0;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --lift: 0 2px 6px rgba(90, 100, 70, 0.08), 0 10px 24px rgba(90, 100, 70, 0.10);
+  --lift-sm: 0 1px 2px rgba(90, 100, 70, 0.05);
+}
+/* 自然氛围：柔和暖绿渐变 + 纸张颗粒更明显 */
+[data-theme="nature"] body::before {
+  background:
+    radial-gradient(50rem 38rem at 10% -6%, rgba(122, 155, 109, 0.16), transparent 60%),
+    radial-gradient(44rem 34rem at 100% 8%, rgba(200, 185, 138, 0.14), transparent 58%);
+}
+[data-theme="nature"] body::after { opacity: 0.06; }
+[data-theme="nature"] .floaty { opacity: 0.35; }
+/* 自然特色：焦点区柔和渐变底（像被阳光晒暖的纸） */
+[data-theme="nature"] .focus {
+  border-color: var(--accent-line);
+  background: linear-gradient(135deg, var(--card) 0%, var(--card-sunken) 100%);
+}
+[data-theme="nature"] .task:hover .task-index { transform: scale(1.06); }
+
+/* ============================================================
+   风格 6：复古未来 Retro
+   深黑绿底、霓虹绿、等宽数字、CRT 扫描线
+   ============================================================ */
+
+[data-theme="retro"] {
+  --bg: #0d0f0d;
+  --card: #151a15;
+  --card-hover: #1a201a;
+  --card-sunken: #101410;
+  --line: rgba(57, 255, 136, 0.12);
+  --line-strong: rgba(57, 255, 136, 0.24);
+  --text: #c8ffd8;
+  --text-dim: #7ab88c;
+  --text-soft: #8fcf9f;
+  --text-faint: #4a6a52;
+  --accent: #39ff88;
+  --accent-line: #6bffa6;
+  --accent-soft: rgba(57, 255, 136, 0.14);
+  --seal: #39ff88;
+  --danger: #ff5c5c;
+  --ok: #39ff88;
+  --rank-1: #39ff88;
+  --rank-2: #00e5ff;
+  --rank-3: #ff5cff;
+  --rank-4: #ffe14d;
+  --rank-5: #7a5cff;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --font-display: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+  --font-body: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --lift: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 14px rgba(57, 255, 136, 0.10);
+  --lift-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+/* 复古氛围：霓虹渐变 + CRT 扫描线（覆盖内容，不挡交互） */
+[data-theme="retro"] body::before {
+  background:
+    radial-gradient(48rem 36rem at 6% -6%, rgba(57, 255, 136, 0.14), transparent 60%),
+    radial-gradient(44rem 34rem at 102% 10%, rgba(0, 229, 255, 0.12), transparent 58%),
+    radial-gradient(40rem 32rem at 50% 118%, rgba(255, 92, 255, 0.08), transparent 60%);
+}
+[data-theme="retro"] body::after {
+  opacity: 1;
+  z-index: 2;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12) 0px,
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+[data-theme="retro"] .floaty { opacity: 0.3; }
+[data-theme="retro"] .task-index { color: #0d0f0d; font-family: var(--font-display); }
+[data-theme="retro"] .focus {
+  border-color: var(--accent);
+  box-shadow: var(--lift), 0 0 22px rgba(57, 255, 136, 0.14);
+}
+[data-theme="retro"] .focus-label {
+  color: #0d0f0d;
+  background: var(--accent);
+  box-shadow: 0 0 16px rgba(57, 255, 136, 0.4);
+}
+[data-theme="retro"] .focus-text { font-family: var(--font-display); }
+[data-theme="retro"] .pomodoro-time { font-family: var(--font-display); color: var(--accent); }
+
+/* ============================================================
+   风格 7：轻奢雅致 Luxe
+   象牙白底、金箔强调、衬线大标题、金色序号、大留白
+   ============================================================ */
+
+[data-theme="luxe"] {
+  --bg: #faf7f0;
+  --card: #fffdfa;
+  --card-hover: #ffffff;
+  --card-sunken: #f3ede0;
+  --line: rgba(150, 120, 60, 0.16);
+  --line-strong: rgba(150, 120, 60, 0.30);
+  --text: #2a2520;
+  --text-dim: #857760;
+  --text-soft: #6f6352;
+  --text-faint: #b3a588;
+  --accent: #b8923f;
+  --accent-line: #d4b26a;
+  --accent-soft: rgba(184, 146, 63, 0.14);
+  --seal: #b8923f;
+  --danger: #a04040;
+  --ok: #5a8a5a;
+  --rank-1: #d4b26a;
+  --rank-2: #c9a86a;
+  --rank-3: #bfa06a;
+  --rank-4: #d4b26a;
+  --rank-5: #c9a86a;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --font-display: 'Cormorant Garamond', 'Songti SC', 'STSong', 'SimSun', serif;
+  --font-body: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --lift: 0 2px 4px rgba(150, 120, 60, 0.08), 0 12px 28px rgba(150, 120, 60, 0.12);
+  --lift-sm: 0 1px 2px rgba(150, 120, 60, 0.05);
+}
+/* 轻奢：去氛围，纯象牙底大留白 */
+[data-theme="luxe"] body::before,
+[data-theme="luxe"] body::after,
+[data-theme="luxe"] .floaties { display: none; }
+[data-theme="luxe"] .app-header h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; }
+[data-theme="luxe"] .task .task-index { color: #3a2f18; font-family: var(--font-display); }
+/* 轻奢特色：焦点区金色左竖线 + 衬线大标题 + 更大留白 */
+[data-theme="luxe"] .focus {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  padding: 30px 28px;
+}
+[data-theme="luxe"] .focus::after { display: none; }
+[data-theme="luxe"] .focus-label {
+  color: var(--accent);
+  background: transparent;
+  padding: 0;
+  letter-spacing: 0.24em;
+  font-size: 11px;
+}
+[data-theme="luxe"] .focus-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: 0.02em;
+}
+[data-theme="luxe"] .task:hover { transform: none; }
+[data-theme="luxe"] .task:hover .task-index { transform: none; }
