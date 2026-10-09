@@ -1,6 +1,6 @@
 # vibe-coding
 
-一个从零搭起来的网站项目。**当前进度：Day 19 → 重构拆出数据访问层**。
+一个从零搭起来的网站项目。**当前进度：Day 20 → 公网接线验证完成**。
 
 **产品名**：智伴 PriorityPal —— 一个强制排序的待办小工具。所有任务排在一条唯一的队列里，**位置就是优先级**，第 1 名永远只有一个。
 
@@ -31,7 +31,8 @@
 | `day17-read-api.md` | Day 17 | Day 17 记录：接口映射、REST 网关 + API Key 的技术路径、验证结果 |
 | `day18-post-api.md` | Day 18 | Day 18 记录：POST 接口、防重复/防空校验、PostgREST 插入语法、验证结果 |
 | `day19-refactor.md` | Day 19 | Day 19 记录：分层思路、拆分对比、分层示意图、回归验证结果 |
-| `app.js` | Day 7–13 / Day 17 | 全部逻辑。Day 17 板块②接数据：`DATA_SOURCE` 改 `api`，从 `/api/tasks` 读真实数据替换 mock |
+| `day20-golive.md` | Day 20 | Day 20 记录：跨域识别方法论、公网验证三项、数据同步时间 |
+| `app.js` | Day 7–13 / Day 17 / Day 20 | 全部逻辑。Day 17 接真实数据（`DATA_SOURCE='api'`）；Day 20 加「数据同步于」时间显示 |
 | `.workbuddy/skills/筛选交互检查/SKILL.md` | Day 12 | 筛选检查 Skill：frontmatter（name + description）+ 三条筛选验证清单 |
 | `.workbuddy/skills/筛选交互检查/调用记录.md` | Day 12 | Skill 真实调用记录：三种筛选情况（有结果/无结果/清空恢复）实测全通过 |
 | `.env`（本地） | Day 2 | **本地文件，已被忽略，永远不会出现在 GitHub 上**（Day 23 才会真正用到） |
@@ -82,7 +83,8 @@ py -m http.server 8000
 - [x] Day 17 — **GET 读接口**：`/api/tasks`（全部任务）+ `/api/tasks/first`（第一件事），走 REST 网关读 PG，公网实测通过
 - [x] Day 18 — **POST 写接口**：`/api/tasks` 新增任务，防重复提交 + 防空文本校验，同步写 `task_events`，公网实测通过
 - [x] Day 19 — **重构拆数据访问层**：`db.js`（新）管 fetch 网关，`index.js` 只管 HTTP；契约零改动，本地+公网 6 项回归全过
-- [ ] Day 20 — 接前端写操作（增删改同步到后端）+ 真实数据版重新上传
+- [x] Day 20 — **公网接线验证**：首页展示真实数据 ✅ 控制台改数据刷新跟着变 ✅ F12 请求地址为公网 ✅；加「数据同步于」显示
+- [ ] Day 21+ — 接前端写操作（增删改同步到后端）
 - [ ] Day 23 — 接数据库，用上 `.env`
 
 ## 视觉说明（Day 7）

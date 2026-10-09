@@ -170,6 +170,19 @@
     return q === 'empty' || q === 'error' || q === 'loading' ? q : null;
   }
 
+  /* Day 20 余力加练：显示数据同步时间（fetch 完成的本地时刻）。
+     只在 api 模式的首次加载后出现一次，动态创建、不写死在 HTML 里。 */
+  function showSyncTime() {
+    let note = document.getElementById('syncTime');
+    if (!note) {
+      note = document.createElement('p');
+      note.id = 'syncTime';
+      note.style.cssText = 'font-size:12px;color:#a8a29e;margin:4px 0 0;';
+      el.filterCount.insertAdjacentElement('afterend', note);
+    }
+    note.textContent = '数据同步于 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  }
+
   async function bootstrap() {
     const scenario = demoScenario();
 
@@ -197,6 +210,7 @@
         tasks = await loadFromSource();
         showState('ready');
         render();
+        showSyncTime();
       } catch (err) {
         console.warn('加载任务失败：', err);
         showState('error');
