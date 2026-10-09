@@ -4,7 +4,7 @@
 
 ## 项目信息
 - 项目名：vibe-coding
-- 当前阶段：第 3 周 · Day 18（POST 写接口：/api/tasks 新增任务 + 防重复/防空校验）
+- 当前阶段：第 3 周 · Day 19（重构：拆出数据访问层 db.js，HTTP 层与数据访问分离）
 - 技术栈：前端纯前端单页（HTML + CSS + 原生JS + localStorage）＋ 后端 CloudBase 免费体验版（Serverless PostgreSQL + HTTP 云函数）。前端路线 Day 5 定稿，Day 15起接后端；读写接口走 CloudBase PostgREST 网关（个人版不支持 TCP 直连 PG）
 - 负责人：学员本人
 
@@ -46,4 +46,5 @@
 - Day 16：数据模型设计 + 建表 + 种子 + select 验证。两张表：`tasks`（核心表，Day 17 读接口只依赖它）+ `task_events`（事件表，靠 `task_id` 外键一对多关联）。脚本在 `db/schema.sql`、`db/seed.sql`，记录见 `day16-db.md`。（已完成）
 - Day 17：GET 读接口 `/api/tasks`（全部任务）+ `/api/tasks/first`（第一件事），走 CloudBase PostgREST 网关读 PG（个人版不支持 TCP 直连），鉴权用服务端 API Key（环境变量，明文只在 `.env`）。记录见 `day17-read-api.md`。（已完成）
 - Day 18：POST 写接口 `/api/tasks` 新增任务，应用层防「重复提交」（相同 text 拒绝 409）+「错误输入」（空 text 拒绝 400，中文提示），插入 tasks 后同步写 `task_events` created 事件。记录见 `day18-post-api.md`。（已完成）
+- Day 19：重构拆出数据访问层——新建 `functions/api-tasks/db.js`（query/insert/COLUMNS，全部 fetch 网关逻辑），`index.js` 只剩 HTTP 层（require './db'）。契约零改动，本地+公网 6 项回归全过。记录见 `day19-refactor.md`。（已完成）
 - Day 23：接数据库（`.env` 真正用上；表结构 Day 16 已建好，Day 23 主要是配置与迁移）。

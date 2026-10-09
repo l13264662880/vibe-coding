@@ -1,29 +1,21 @@
-// HTTP 云函数：/api/tasks（Day 17 读接口 + Day 18 写接口）
+// index.js —— HTTP 层：收请求 → 校验 → 调数据访问层 → 回响应
 //
-// 一个函数同时处理多个路径和方法（路由是前缀匹配，path=/api/tasks 会匹配子路径）：
+// Day 19 分层重构：
+//   index.js（本文件）＝ HTTP 层。管路由、请求解析、字段校验、组装响应。
+//   db.js（./db）      ＝ 数据访问层。管怎么读写数据库（fetch REST 网关）。
+// 「查数据库」的代码已从本文件移到 db.js——以后换数据库只改 db.js，
+// HTTP 逻辑一行不动；反过来加新接口只改本文件，不碰数据库细节。
+//
+// 一个云函数同时处理多个路径和方法（路由是前缀匹配，path=/api/tasks 匹配子路径）：
 //   GET  /api/tasks         → 全部未删除任务，按 position 升序
 //   GET  /api/tasks/first   → 「第一件事」：第 1 位未完成、未删除的任务
 //   GET  /api/tasks?limit=N → 限制返回条数
 //   POST /api/tasks         → 新增任务（Day 18）
 //
-// 数据从哪来：
-//   个人版（免费体验版）不支持 TCP 直连 PostgreSQL，这里通过 CloudBase 的
-//   PostgREST 网关用 HTTP 读写数据：
-//     https://<envId>.api.tcloudbasegateway.com/v1/rdb/rest/tasks
-//   鉴权用服务端 API Key（环境变量 CLOUDBASE_APIKEY，由 cloudbaserc.json 从 .env 注入）。
-//
-// 为什么不用 @cloudbase/node-sdk 的 app.rdb()：
-//   rdb().from() 在本环境会把环境 ID 误当 schema 报 PGRST106，REST 网关的
-//   裸表名写法反而稳定可靠（Day 17 实测）。
+// 契约（路径 / 字段 / 返回形状）见 api-contract.md，重构不许动它。
 
 const http = require('http');
-
-const ENV_ID = 'yuanjian-d5gdhcntg91022662';
-const GATEWAY = `https://${ENV_ID}.api.tcloudbasegateway.com/v1/rdb/rest`;
-const API_KEY = process.env.CLOUDBASE_APIKEY || '';
-
-// 返回给前端的字段（对齐 Day 16 tasks 表，不含 deleted_at/created_at/updated_at）
-const COLUMNS = 'id,text,position,done,due,estimate';
+const db = require('./db'); // 数据访问层（Day 19 拆出）：query / insert / COLUMNS
 
 // 统一 JSON 响应
 function send(res, status, obj) {
@@ -43,38 +35,6 @@ async function readBody(req) {
   return raw;
 }
 
-// 通过 REST 网关查（GET），path 形如 `/tasks?select=...&...`
-async function queryRdb(path) {
-  const res = await fetch(`${GATEWAY}${path}`, {
-    headers: { Authorization: `Bearer ${API_KEY}`, Accept: 'application/json' },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`网关读取错误 ${res.status}: ${body.slice(0, 200)}`);
-  }
-  return res.json();
-}
-
-// 通过 REST 网关写（POST），返回插入的行（数组）
-async function insertRdb(table, body, select) {
-  const url = `${GATEWAY}/${table}` + (select ? `?select=${select}` : '');
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation', // 让 PostgREST 返回插入后的行（含自增 id）
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`网关写入错误 ${res.status}: ${errBody.slice(0, 200)}`);
-  }
-  return res.json();
-}
-
 const server = http.createServer(async (req, res) => {
   // 路由是前缀匹配 /api/tasks，所以 /api/tasks、/api/tasks/first 都会进到这里。
   // 网关可能保留完整路径、也可能剥离前缀，因此只判断「结尾是否是 /first」。
@@ -85,8 +45,8 @@ const server = http.createServer(async (req, res) => {
     // ---------------- GET 读（Day 17） ----------------
     if (req.method === 'GET') {
       if (isFirst) {
-        const data = await queryRdb(
-          `/tasks?select=${COLUMNS}&deleted_at=is.null&done=is.false&order=position.asc&limit=1`
+        const data = await db.query(
+          `/tasks?select=${db.COLUMNS}&deleted_at=is.null&done=is.false&order=position.asc&limit=1`
         );
         send(res, 200, { ok: true, data: data[0] || null });
         return;
@@ -98,8 +58,8 @@ const server = http.createServer(async (req, res) => {
         const n = Math.max(1, parseInt(rawLimit, 10) || 20);
         limitQ = `&limit=${n}`;
       }
-      const data = await queryRdb(
-        `/tasks?select=${COLUMNS}&deleted_at=is.null&order=position.asc${limitQ}`
+      const data = await db.query(
+        `/tasks?select=${db.COLUMNS}&deleted_at=is.null&order=position.asc${limitQ}`
       );
       send(res, 200, { ok: true, data });
       return;
@@ -129,7 +89,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       // 3. 查重（防「重复提交」：相同 text 的未删除任务已存在）
-      const dup = await queryRdb(
+      const dup = await db.query(
         `/tasks?select=id&text=eq.${encodeURIComponent(text)}&deleted_at=is.null`
       );
       if (dup.length > 0) {
@@ -139,11 +99,11 @@ const server = http.createServer(async (req, res) => {
       }
 
       // 4. 算 position = 当前最大 position + 1（新任务加到列表末尾）
-      const maxRow = await queryRdb(`/tasks?select=position&order=position.desc&limit=1`);
+      const maxRow = await db.query(`/tasks?select=position&order=position.desc&limit=1`);
       const position = (maxRow.length > 0 ? maxRow[0].position : 0) + 1;
 
       // 5. 插入 tasks（due / estimate 可选，透传）
-      const inserted = await insertRdb(
+      const inserted = await db.insert(
         'tasks',
         {
           text,
@@ -152,14 +112,14 @@ const server = http.createServer(async (req, res) => {
           due: payload.due || null,
           estimate: payload.estimate != null ? payload.estimate : null,
         },
-        COLUMNS
+        db.COLUMNS
       );
       const newTask = inserted[0];
       log('插入成功', `id=${newTask.id}`, `position=${newTask.position}`, `text=${text}`);
 
       // 6. 写 task_events（created 事件），失败不阻断主流程、只记日志
       try {
-        await insertRdb('task_events', { task_id: newTask.id, event_type: 'created' });
+        await db.insert('task_events', { task_id: newTask.id, event_type: 'created' });
         log('事件已记录 created', `task_id=${newTask.id}`);
       } catch (e) {
         log('事件记录失败（主流程已成功）', e.message);
