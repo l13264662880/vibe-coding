@@ -4,7 +4,7 @@
 
 ## 项目信息
 - 项目名：vibe-coding
-- 当前阶段：第 3 周 · Day 20（公网接线验证：首页真实数据 + 改库刷新联动 + F12 公网请求地址，三项实测通过）
+- 当前阶段：第 3 周 · Day 21（周验收完成：12 项 9 PASS / 3 FAIL 如实标记，同伴交叉验证三行 PASS，演示提纲走通）
 - 技术栈：前端纯前端单页（HTML + CSS + 原生JS + localStorage）＋ 后端 CloudBase 免费体验版（Serverless PostgreSQL + HTTP 云函数）。前端路线 Day 5 定稿，Day 15起接后端；读写接口走 CloudBase PostgREST 网关（个人版不支持 TCP 直连 PG）
 - 负责人：学员本人
 
@@ -48,4 +48,5 @@
 - Day 18：POST 写接口 `/api/tasks` 新增任务，应用层防「重复提交」（相同 text 拒绝 409）+「错误输入」（空 text 拒绝 400，中文提示），插入 tasks 后同步写 `task_events` created 事件。记录见 `day18-post-api.md`。（已完成）
 - Day 19：重构拆出数据访问层——新建 `functions/api-tasks/db.js`（query/insert/COLUMNS，全部 fetch 网关逻辑），`index.js` 只剩 HTTP 层（require './db'）。契约零改动，本地+公网 6 项回归全过。记录见 `day19-refactor.md`。（已完成）
 - Day 20：公网接线验证——首页真实数据、改库刷新联动（estimate 90→30 页面跟着变，验证后恢复）、F12 请求地址为公网（CDP 抓 performance 实测）三项全过；`app.js` 加「数据同步于」显示（余力加练，不改后端）。记录见 `day20-golive.md`。（已完成）
+- Day 21：周验收——`week3-review.md` 12 项（9 PASS / 3 FAIL：前端写操作未同步、RLS 未配、演示视频未录，均已记录到下周）；同伴交叉验证（独立脚本 peer-check.js，只带公网 URL）三行 PASS：可打开/可读写/无报错；演示提纲 `demo-outline.md` 四段结构已走通。（已完成）
 - Day 23：接数据库（`.env` 真正用上；表结构 Day 16 已建好，Day 23 主要是配置与迁移）。
