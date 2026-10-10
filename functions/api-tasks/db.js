@@ -49,4 +49,28 @@ async function insert(table, body, select) {
   return res.json();
 }
 
-module.exports = { query, insert, COLUMNS };
+// 更新（PATCH）：按 id 更新字段，返回更新后的行（数组；空数组 = 没这个 id）
+// Day 22 新增。path 用 PostgREST 的过滤语法 `?id=eq.<id>`，
+// `Prefer: return=representation` 让网关返回更新后的行。
+// 软删除（Day 22 余力加练）也走这里：update('tasks', id, { deleted_at: ... })。
+async function update(table, id, body, select) {
+  const url =
+    `${GATEWAY}/${table}?id=eq.${encodeURIComponent(id)}` + (select ? `&select=${select}` : '');
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`网关更新错误 ${res.status}: ${errBody.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+module.exports = { query, insert, update, COLUMNS };

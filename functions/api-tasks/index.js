@@ -11,6 +11,8 @@
 //   GET  /api/tasks/first   → 「第一件事」：第 1 位未完成、未删除的任务
 //   GET  /api/tasks?limit=N → 限制返回条数
 //   POST /api/tasks         → 新增任务（Day 18）
+//   PATCH /api/tasks?id=N   → 修改任务字段（Day 22，白名单 text/done/due/estimate）
+//   DELETE /api/tasks?id=N  → 软删除任务（Day 22，置 deleted_at，可找回）
 //
 // 契约（路径 / 字段 / 返回形状）见 api-contract.md，重构不许动它。
 
@@ -130,8 +132,140 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // 其他方法（PATCH / DELETE 第 4 周才做）
-    send(res, 405, { ok: false, error: '只支持 GET 和 POST' });
+    // ---------------- PATCH 修改任务（Day 22） ----------------
+    // 用法：PATCH /api/tasks?id=<id>，请求体为要改的字段。
+    // 白名单字段：text / done / due / estimate。
+    // position 不在白名单里——排序走专门的 reorder 逻辑（今天不做），
+    // 不让「改个名字的请求」顺手挪动别人的优先级。
+    if (req.method === 'PATCH') {
+      log('收到 PATCH /api/tasks');
+
+      const u = new URL(req.url, 'http://localhost');
+      const id = u.searchParams.get('id');
+      if (!id) {
+        send(res, 400, { ok: false, error: '缺少任务 id，用法：PATCH /api/tasks?id=<id>' });
+        return;
+      }
+
+      // 1. 解析请求体
+      const raw = await readBody(req);
+      let payload;
+      try {
+        payload = JSON.parse(raw || '{}');
+      } catch {
+        log('请求体不是合法 JSON');
+        send(res, 400, { ok: false, error: '请求体不是合法的 JSON' });
+        return;
+      }
+
+      // 2. 白名单过滤：只收 text / done / due / estimate
+      const patch = {};
+      if (payload.text !== undefined) patch.text = payload.text;
+      if (payload.done !== undefined) patch.done = payload.done;
+      if (payload.due !== undefined) patch.due = payload.due;
+      if (payload.estimate !== undefined) patch.estimate = payload.estimate;
+      if (Object.keys(patch).length === 0) {
+        log('校验失败：没有可修改的字段');
+        send(res, 400, {
+          ok: false,
+          error: '没有可修改的字段（只支持 text / done / due / estimate）',
+        });
+        return;
+      }
+
+      // 3. 改 text 的话：不能为空，且不能和其他未删除任务重名
+      if (patch.text !== undefined) {
+        patch.text = typeof patch.text === 'string' ? patch.text.trim() : '';
+        if (!patch.text) {
+          log('校验失败：任务内容为空');
+          send(res, 400, { ok: false, error: '任务内容不能为空' });
+          return;
+        }
+        const dup = await db.query(
+          `/tasks?select=id&text=eq.${encodeURIComponent(patch.text)}&deleted_at=is.null&id=neq.${encodeURIComponent(id)}`
+        );
+        if (dup.length > 0) {
+          log('校验失败：改成了已有任务的文字', patch.text);
+          send(res, 409, { ok: false, error: '这个任务已经存在了' });
+          return;
+        }
+      }
+
+      // 4. 执行更新；更新不到行 = 这个 id 不存在（或已删除）→ 404
+      const updated = await db.update('tasks', id, patch, db.COLUMNS);
+      if (updated.length === 0) {
+        log('未找到任务', `id=${id}`);
+        send(res, 404, { ok: false, error: '任务不存在' });
+        return;
+      }
+      const row = updated[0];
+      log('更新成功', `id=${id}`, `fields=${Object.keys(patch).join(',')}`);
+
+      // 5. 写事件（done 改动记 done/undone，其余记 edited），失败不阻断
+      const eventType =
+        patch.done === true ? 'done' : patch.done === false ? 'undone' : 'edited';
+      try {
+        await db.insert('task_events', { task_id: row.id, event_type: eventType });
+      } catch (e) {
+        log('事件记录失败（主流程已成功）', e.message);
+      }
+
+      send(res, 200, { ok: true, data: row });
+      return;
+    }
+
+    // ---------------- DELETE 删除任务（Day 22，软删除） ----------------
+    // 用法：DELETE /api/tasks?id=<id>。
+    // 删除为什么比新增容易出事？因为不可逆、触发条件太随意。所以这里不真删：
+    // 只把 deleted_at 置为当前时间（Day 16 schema 就有这列，读接口全带
+    // deleted_at=is.null 过滤，行自然「消失」），删错了把 deleted_at 清空即可找回。
+    if (req.method === 'DELETE') {
+      log('收到 DELETE /api/tasks');
+
+      const u = new URL(req.url, 'http://localhost');
+      const id = u.searchParams.get('id');
+      if (!id) {
+        send(res, 400, { ok: false, error: '缺少任务 id，用法：DELETE /api/tasks?id=<id>' });
+        return;
+      }
+
+      // 1. 先找到这一行（顺便拿删除前的 position 给事件用）；找不到 → 404
+      const found = await db.query(
+        `/tasks?select=${db.COLUMNS}&id=eq.${encodeURIComponent(id)}&deleted_at=is.null`
+      );
+      if (found.length === 0) {
+        log('未找到任务（或已删除）', `id=${id}`);
+        send(res, 404, { ok: false, error: '任务不存在' });
+        return;
+      }
+      const before = found[0];
+
+      // 2. 软删除：置 deleted_at（PostgREST 对 timestamptz 传 ISO 字符串即可）
+      const updated = await db.update(
+        'tasks',
+        id,
+        { deleted_at: new Date().toISOString() },
+        db.COLUMNS
+      );
+      log('软删除成功', `id=${id}`, `text=${before.text}`, `position=${before.position}`);
+
+      // 3. 写 deleted 事件（to_position 记删除前的位置，恢复时用），失败不阻断
+      try {
+        await db.insert('task_events', {
+          task_id: Number(id),
+          event_type: 'deleted',
+          to_position: before.position,
+        });
+      } catch (e) {
+        log('事件记录失败（主流程已成功）', e.message);
+      }
+
+      send(res, 200, { ok: true, data: updated[0] || before });
+      return;
+    }
+
+    // 其他方法
+    send(res, 405, { ok: false, error: '只支持 GET、POST、PATCH 和 DELETE' });
   } catch (e) {
     log('异常', e.message);
     send(res, 500, { ok: false, error: e.message });

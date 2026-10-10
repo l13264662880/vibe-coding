@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Day 22 证据 1｜PATCH 修改生效</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background:#f4f6f8; margin:0; padding:36px; color:#1f2937; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:#6b7280; margin-bottom:24px; font-size:14px; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 24px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .card h2 { font-size:17px; margin:0 0 10px; }
+  pre { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px; font-size:14px; line-height:1.55; overflow-x:auto; margin:0; }
+  .hl { color:#fbbf24; font-weight:bold; }
+  .tag { display:inline-block; padding:2px 10px; border-radius:999px; font-size:13px; font-weight:bold; }
+  .tag-before { background:#fef3c7; color:#92400e; }
+  .tag-after { background:#dcfce7; color:#166534; }
+  .arrow { font-size:22px; text-align:center; color:#2563eb; margin:6px 0; font-weight:bold; }
+  .cmd { background:#1e293b; color:#a5f3fc; padding:10px 14px; border-radius:8px; font-family:Consolas,monospace; font-size:13.5px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<h1>Day 22 证据 1｜PATCH 修改一条数据生效</h1>
+<div class="sub">接口：PATCH /api/tasks?id=19　·　公网地址：https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com　·　2026-10-10</div>
+
+<div class="card">
+  <h2>① 新建测试任务（POST）— 拿到 id=19，estimate = <span class="hl">30</span></h2>
+  <div class="cmd">curl -X POST .../api/tasks -d '{"text":"Day22演示任务","estimate":30}'</div>
+  <pre>{ "ok": true, "data": { "id": 19, "text": "Day22演示任务", "position": 11, "done": false, "due": null, "estimate": <span class="hl">30</span> } }</pre>
+</div>
+
+<div class="card">
+  <h2><span class="tag tag-before">改之前</span>　GET /api/tasks 返回该条</h2>
+  <pre>{ "id": 19, "text": "Day22演示任务", "position": 11, "done": false, "due": null, "estimate": <span class="hl">30</span> }</pre>
+  <div class="arrow">↓ PATCH /api/tasks?id=19　body: {"estimate": 90}</div>
+  <h2><span class="tag tag-after">改之后</span>　PATCH 响应（Prefer: return=representation 返回更新后的行）</h2>
+  <pre>{ "ok": true, "data": { "id": 19, "text": "Day22演示任务", "position": 11, "done": false, "due": null, "estimate": <span class="hl">90</span> } }</pre>
+</div>
+
+<div class="card">
+  <h2>③ 对照错误分支也验证过</h2>
+  <pre>PATCH 无可修改字段（{"position":5}） → 400 { "ok": false, "error": "没有可修改的字段（只支持 text / done / due / estimate）" }
+PATCH 不存在的 id=999          → 404 { "ok": false, "error": "任务不存在" }</pre>
+</div>
+</body>
+</html>

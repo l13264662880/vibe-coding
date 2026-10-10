@@ -236,11 +236,92 @@ curl -X POST "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/task
 
 ---
 
-## 5. 错误约定（读写通用）
+## 5. 修改任务 `PATCH /api/tasks?id=<id>`
+
+> Day 22 新增。按 id 修改任务字段，返回修改后的任务对象。
+
+| 项 | 值 |
+| --- | --- |
+| 方法 | `PATCH` |
+| 路径 | `/api/tasks?id=<id>` |
+| 鉴权 | 无（公开） |
+| 请求体 | JSON：`text` / `done` / `due` / `estimate` 的任意组合（至少 1 个） |
+
+### 5.1 可修改字段（白名单）
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `text` | string | 任务文字，trim 后不能为空；改后不能与其他未删除任务重名 |
+| `done` | boolean | 完成/未完成 |
+| `due` | string (date) | 截止日期，可传 `null` 清空 |
+| `estimate` | integer | 预估耗时（分钟），可传 `null` 清空 |
+
+> `position` **不在白名单**：排序走专门的 reorder 逻辑（后续版本），不允许改字段时顺手挪优先级。
+
+### 5.2 成功响应（HTTP 200）
+
+```json
+{ "ok": true, "data": { "id": 14, "text": "给爸爸买生日礼物", "position": 9, "done": false, "due": "2026-10-12", "estimate": 90 } }
+```
+
+### 5.3 错误响应
+
+| 场景 | 状态码 | 返回 |
+| --- | --- | --- |
+| 缺 `id` 参数 | `400` | `{ "ok": false, "error": "缺少任务 id，用法：PATCH /api/tasks?id=<id>" }` |
+| 请求体无可修改字段 / 非法 JSON | `400` | `没有可修改的字段（只支持 text / done / due / estimate）` / `请求体不是合法的 JSON` |
+| `text` 为空 | `400` | `{ "ok": false, "error": "任务内容不能为空" }` |
+| 改后的 `text` 与其他任务重名 | `409` | `{ "ok": false, "error": "这个任务已经存在了" }` |
+| id 不存在（或已删除） | `404` | `{ "ok": false, "error": "任务不存在" }` |
+
+### 5.4 调用示例
+
+```bash
+curl -X PATCH "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks?id=14" \
+  -H "Content-Type: application/json" -d '{"estimate":90}'
+```
+
+---
+
+## 6. 删除任务 `DELETE /api/tasks?id=<id>`（软删除）
+
+> Day 22 新增。**不真删数据**：只把 `deleted_at` 置为当前时间，读接口（`GET /api/tasks`、`GET /api/tasks/first`）全带 `deleted_at IS NULL` 过滤，该条自然不再返回；删错了把 `deleted_at` 清空即可找回。
+
+| 项 | 值 |
+| --- | --- |
+| 方法 | `DELETE` |
+| 路径 | `/api/tasks?id=<id>` |
+| 鉴权 | 无（公开） |
+| 请求体 | 无 |
+
+### 6.1 成功响应（HTTP 200）
+
+返回被删除的任务对象（字段同读接口）：
+
+```json
+{ "ok": true, "data": { "id": 14, "text": "给爸爸买生日礼物", "position": 9, "done": false, "due": "2026-10-12", "estimate": 60 } }
+```
+
+### 6.2 错误响应
+
+| 场景 | 状态码 | 返回 |
+| --- | --- | --- |
+| 缺 `id` 参数 | `400` | `{ "ok": false, "error": "缺少任务 id，用法：DELETE /api/tasks?id=<id>" }` |
+| id 不存在（或已删除过） | `404` | `{ "ok": false, "error": "任务不存在" }` |
+
+### 6.3 调用示例
+
+```bash
+curl -X DELETE "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks?id=14"
+```
+
+---
+
+## 7. 错误约定（读写通用）
 
 | 场景 | 状态码 | 说明 |
 | --- | --- | --- |
 | 路径不存在 | `404` | 请求了 `/api/tasks`、`/api/tasks/first` 以外的路径 |
-| 方法不支持 | `405` | 只支持 GET 和 POST（PATCH/DELETE 第 4 周才做） |
+| 方法不支持 | `405` | 只支持 GET、POST、PATCH、DELETE |
 | 服务内部异常 | `500` | 云函数或数据库网关出错 |
 
