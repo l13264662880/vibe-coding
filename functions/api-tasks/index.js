@@ -25,7 +25,9 @@ function send(res, status, obj) {
   res.end(JSON.stringify(obj));
 }
 
-// 服务端日志（Day 18 余力加练）：排查问题用 `tcb fn log api-tasks` 看
+// 服务端日志（Day 18 余力加练引入；Day 23 升级为统一请求日志）：
+// 每条请求结束时记「时间 方法 路径 → 状态码」。排查用 `tcb fn log api-tasks` 看。
+// 注意：这里的日志只有服务端能看，用户永远只会收到下面定义的中文提示。
 function log(...args) {
   console.log(`[${new Date().toISOString()}]`, ...args);
 }
@@ -42,6 +44,11 @@ const server = http.createServer(async (req, res) => {
   // 网关可能保留完整路径、也可能剥离前缀，因此只判断「结尾是否是 /first」。
   const path = (req.url || '/').split('?')[0];
   const isFirst = path.endsWith('/first');
+
+  // Day 23 余力加练：统一请求日志——响应真正发出时记「方法 路径 → 状态码」
+  res.on('finish', () => {
+    log('请求', `${req.method} ${path}`, `→ ${res.statusCode}`);
+  });
 
   try {
     // ---------------- GET 读（Day 17） ----------------
@@ -267,8 +274,11 @@ const server = http.createServer(async (req, res) => {
     // 其他方法
     send(res, 405, { ok: false, error: '只支持 GET、POST、PATCH 和 DELETE' });
   } catch (e) {
-    log('异常', e.message);
-    send(res, 500, { ok: false, error: e.message });
+    // Day 23「把裸报错改成人话」：改前直接回传 e.message（可能是
+    // 「网关写入错误 401: {"message":...}」这类英文/内部细节，暴露技术栈）；
+    // 改后用户只看到一句中文，完整报错留在上面的服务端日志里。
+    log('异常（用户已收到中文提示，以下为细节）', e.message);
+    send(res, 500, { ok: false, error: '服务器开小差了，请稍后再试' });
   }
 });
 

@@ -96,7 +96,7 @@ HTTP 云函数**不会自动注入凭据**（普通事件函数才会），必�
 - API Key 明文只存在本地 `.env`（已被 `.gitignore` 忽略，**不进 Git**）
 - `cloudbaserc.json` 里只写 `{{env.CLOUDBASE_APIKEY}}` 引用，无明文
 - 代码里不硬编码密钥，只从环境变量读
-- API Key 名称 `day17-read-api`，KeyId `skRnc7wiQNysk4Ib7x6vsA`（如泄露可在控制台删除重建）
+- API Key 名称 `day17-read-api`，KeyId `skRnc7****`（Day 23 打码；完整 KeyId 只在 CloudBase 控制台看，明文密钥只在本地 .env）
 
 ## 七｜Day 18 接手须知
 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Day 23 证据 2｜三类错误中文提示统一</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background:#f4f6f8; margin:0; padding:36px; color:#1f2937; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:#6b7280; margin-bottom:24px; font-size:14px; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 24px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .card h2 { font-size:17px; margin:0 0 10px; }
+  pre { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px; font-size:14px; line-height:1.6; overflow-x:auto; margin:0; }
+  .hl { color:#4ade80; font-weight:bold; }
+  .cmd { background:#1e293b; color:#a5f3fc; padding:10px 14px; border-radius:8px; font-family:Consolas,monospace; font-size:13.5px; margin-bottom:12px; }
+  .note { color:#6b7280; font-size:13.5px; margin-top:10px; }
+</style>
+</head>
+<body>
+<h1>Day 23 证据 2｜三类错误提示统一 —— 全部是中文人话</h1>
+<div class="sub">接口：https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks　·　2026-10-11　·　curl 实测</div>
+
+<div class="card">
+  <h2>① 参数/校验错（400）</h2>
+  <div class="cmd">curl -X POST .../api/tasks -d '{"text":"  "}'</div>
+  <pre>{ "ok": false, "error": <span class="hl">"任务内容不能为空"</span> }
+
+curl -X PATCH .../api/tasks?id=1 -d '{"position":3}'
+{ "ok": false, "error": <span class="hl">"没有可修改的字段（只支持 text / done / due / estimate）"</span> }</pre>
+</div>
+
+<div class="card">
+  <h2>② 资源不存在（404）</h2>
+  <div class="cmd">curl -X PATCH .../api/tasks?id=999 -d '{"estimate":5}'　·　curl -X DELETE .../api/tasks?id=999</div>
+  <pre>{ "ok": false, "error": <span class="hl">"任务不存在"</span> }</pre>
+</div>
+
+<div class="card">
+  <h2>③ 服务器内部错（500）—— 今天的主修改：裸报错改成人话</h2>
+  <pre><span style="color:#f87171">改前（裸报错，直接把内部细节甩给用户）：</span>
+  { "ok": false, "error": "网关写入错误 401: {\"message\":\"...\"}" }   ← e.message 原样返回
+<span style="color:#4ade80">改后（中文一句话，细节只进服务端日志）：</span>
+  { "ok": false, "error": "服务器开小差了，请稍后再试" }</pre>
+  <p class="note">触发路径：db.js 抛出内部错误 → index.js 的 catch 拦截 → 用户收中文提示，完整报错留在 `tcb fn log` 的服务端日志里。</p>
+</div>
+
+<div class="card">
+  <h2>④ 方法不支持（405）+ 正常读回归（不受影响）</h2>
+  <pre>curl -X PUT .../api/tasks
+{ "ok": false, "error": <span class="hl">"只支持 GET、POST、PATCH 和 DELETE"</span> }
+
+curl ".../api/tasks?limit=2"
+{ "ok": true, "data": [ { "id": 1, "text": "复习高数第三章", ... }, ... ] }　← 正常读 ✓</pre>
+</div>
+</body>
+</html>

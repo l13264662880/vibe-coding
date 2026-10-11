@@ -73,4 +73,7 @@ async function update(table, id, body, select) {
   return res.json();
 }
 
+// 注意（Day 23）：本文件抛出的错误信息含网关状态码和响应片段，
+// 属于内部细节——只进服务端日志（index.js 的 catch 会拦截），
+// 不会原样返回给用户，用户收到的是统一的中文提示。
 module.exports = { query, insert, update, COLUMNS };
