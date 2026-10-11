@@ -73,8 +73,16 @@ function validateFieldTypes(patch) {
   if (patch.done !== undefined && typeof patch.done !== 'boolean') {
     return 'done 必须是 true 或 false';
   }
-  if (patch.due !== undefined && patch.due !== null && !/^\d{4}-\d{2}-\d{2}$/.test(patch.due)) {
-    return 'due 的格式应为 YYYY-MM-DD';
+  if (patch.due !== undefined && patch.due !== null) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(patch.due)) {
+      return 'due 的格式应为 YYYY-MM-DD';
+    }
+    // Day 24：格式对了还要是真实日历日期（如 2026-99-99 会骗过正则，
+    // 落库时被 PG date 列拒绝 → 500 兜底）。用 UTC 构造后回读比对。
+    const d = new Date(patch.due + 'T00:00:00Z');
+    if (isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== patch.due) {
+      return 'due 不是真实存在的日期';
+    }
   }
   if (
     patch.estimate !== undefined &&
