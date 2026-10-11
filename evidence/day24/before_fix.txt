@@ -1,0 +1,15 @@
+Day 24 复现证据（修复前实跑输出，运行环境 offscreen）
+命令：QT_QPA_PLATFORM=offscreen python tools/bug_probe.py（此时 config.json 为全新默认）
+
+[FAIL] P1 apply_theme 未知主题: 抛 KeyError 崩溃风险（UI 调用即闪退）: '未知主题: no_such_theme'
+[FAIL] P2 set_part 不存在的 part_id: part_id='no_such_part' 被写入 config.json 且文件不存在 -> 该部位层永久消失
+[FAIL] P3 窗口拖出屏幕后重启恢复: 保存 (-500,-500)，重启恢复到 (-500,-500)，屏幕 0,0~799,799 -> 桌宠找不到了
+[FAIL] P4 超长文本气泡: 气泡尺寸 490x96，窗口 160x160 -> 气泡撑爆窗口
+[PASS] P5 快速连点 50 次: 最终状态 idle
+[PASS] P6 config.json 损坏: 已回退默认值
+
+根因定位（P2 主修）：
+- ui/wardrobe.py::set_part() 未校验 assets/parts/<slot>/<part_id>.png 是否存在，
+  就把 part_id 持久化进 data/config.json -> 腐化配置每次启动都被加载，
+  对应图层永久静默消失，直到手工改配置。
+- apply_theme() 同根因：主题引用缺失素材时整槽写入。

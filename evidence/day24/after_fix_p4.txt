@@ -1,0 +1,10 @@
+[FAIL] P1 apply_theme 未知主题: 抛 KeyError 崩溃风险（UI 调用即闪退）: '未知主题: no_such_theme'
+[PASS] P2 set_part 不存在的 part_id: 返回值=False，config 中 head='head_a'，素材存在=True
+[FAIL] P3 窗口拖出屏幕后重启恢复: 保存 (-500,-500)，重启恢复到 (-500,-500)，屏幕 0,0~799,799 → 桌宠找不到了
+[PASS] P4 超长文本气泡: 气泡尺寸 238x180，窗口 160x160
+[PASS] P5 快速连点 50 次: 最终状态 idle
+[PASS] P6 config.json 损坏: 已回退默认值
+
+===== 汇总 =====
+FAIL P1 apply_theme 未知主题
+FAIL P3 窗口拖出屏幕后重启恢复

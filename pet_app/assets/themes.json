@@ -1,0 +1,6 @@
+{
+  "themes": {
+    "autumn":  {"bottom": "bottom_a", "top": "top_a", "shoes": "shoes_a", "head": "head_a", "back": "back_a", "hand": "hand_a"},
+    "mint":    {"bottom": "bottom_b", "top": "top_b", "shoes": "shoes_b", "head": "head_b", "back": "back_b", "hand": "hand_b"}
+  }
+}

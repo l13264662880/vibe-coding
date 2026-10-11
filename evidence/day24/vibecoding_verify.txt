@@ -1,0 +1,17 @@
+== 1) POST due=2026-99-99（修复前：500兜底） ==
+{"ok":false,"error":"due 不是真实存在的日期"}
+== 2) POST due=合法日期（回归） ==
+{"ok":true,"data":{"id":25,"text":"day24验证可删","position":16,"done":false,"due":"2026-10-12","estimate":null}}
+== 3) PATCH 同样非法日期 ==
+{"ok":false,"error":"任务不存在"}
+== 4) 清理测试数据 ==
+{"ok":false,"error":"任务不存在"}
+== 5) 列表无残留 ==
+1
+
+== 补充：PATCH ?id=25 due=2026-02-30 ==
+{"ok":false,"error":"due 不是真实存在的日期"}
+== 补充：DELETE ?id=25 清理测试数据 ==
+{"ok":true,"data":{"id":25,...}}
+== 补充：列表残留检查 ==
+0（测试数据已清理干净）
