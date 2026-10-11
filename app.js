@@ -124,6 +124,41 @@
   const APP_TOKEN = '81ad6640e81a92f614190806e95eac7938463655a73b33e7';
   const apiHeaders = () => ({ 'X-App-Token': APP_TOKEN });
 
+  /* 统一写请求（审查修复后新增）：带令牌发 PATCH/DELETE/POST。
+     永不抛异常，返回 {ok, status, data}——status 0 = 离线/网关不通，
+     由各操作自行降级（本地优先，云端失败只提示不阻断）。 */
+  async function apiSend(method, path, body) {
+    try {
+      const headers =
+        body !== undefined
+          ? { ...apiHeaders(), 'Content-Type': 'application/json' }
+          : apiHeaders();
+      const r = await fetch(`${API_BASE}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      const payload = await r.json().catch(() => null);
+      return { ok: r.ok && !!payload && payload.ok, status: r.status, data: payload ? payload.data : null };
+    } catch (err) {
+      return { ok: false, status: 0, data: null };
+    }
+  }
+
+  /* 是否已和云端同步：数字 id = 从数据库来；字符串 id = 本地新建还没同步成功。 */
+  function isSynced(task) {
+    return typeof task.id === 'number';
+  }
+
+  /* dataset.id 从 DOM 读出来永远是字符串，而云端任务是数字 id——
+     直接拿去 find 会因严格相等匹配失败（页面上的完成/删除按钮因此从
+     Day 17 起一直是「点了没反应」）。统一转成 tasks 里真正存的类型。 */
+  function toTaskId(rawId) {
+    const n = Number(rawId);
+    if (!Number.isNaN(n) && tasks.some((t) => t.id === n)) return n;
+    return rawId;
+  }
+
   function loadFromSource() {
     if (DATA_SOURCE === 'api') {
       // 调 /api/tasks 读真实数据；字段对齐前端任务对象：
@@ -492,6 +527,26 @@
     justAddedId = task.id; // 让它在渲染时滑入
     save();
     render();
+
+    // 云端同步（本地优先）：成功后把临时 id 换成数据库 id，之后的改/删都靠它
+    apiSend('POST', '/api/tasks', { text: task.text, due: task.due, estimate: task.estimate })
+      .then((r) => {
+        if (r.ok && r.data && r.data.id != null) {
+          task.id = r.data.id;
+          save();
+          render(); // 必须重画：行上的 data-id 已随 id 替换，否则后续完成/删除会找不到任务
+        } else if (r.status === 409) {
+          // 云端已有同名任务：撤掉本地这条，保持两边一致
+          tasks = tasks.filter((t) => t !== task);
+          save();
+          render();
+          showToast('云端已有这个任务，没有重复添加');
+        } else if (r.status === 0) {
+          showToast('已本地保存（当前离线，未同步云端）');
+        } else {
+          showToast('已本地保存，云端同步失败');
+        }
+      });
   }
 
   /* 智能排序（预排序）：未完成任务按截止时间从近到远排，
@@ -524,6 +579,12 @@
     save();
     render();
     showToast(task.done ? '已完成「' + shorten(task.text) + '」' : '已恢复为未完成');
+    // 云端同步（本地优先，失败不回滚本地状态）
+    if (isSynced(task)) {
+      apiSend('PATCH', '/api/tasks?id=' + task.id, { done: task.done }).then((r) => {
+        if (!r.ok) showToast(r.status === 0 ? '已本地修改（离线，未同步）' : '云端同步失败');
+      });
+    }
   }
 
   /* 删除：其余任务自动补位（数组 splice 天然做到，相对顺序不变，验收标准 5）。 */
@@ -557,6 +618,13 @@
     } else {
       finish();
     }
+
+    // 云端软删除（本地优先；离线时只删本地，这条云端还在）
+    if (isSynced(removed)) {
+      apiSend('DELETE', '/api/tasks?id=' + removed.id).then((r) => {
+        if (!r.ok) showToast(r.status === 0 ? '已本地删除（离线，云端还在）' : '云端删除失败');
+      });
+    }
   }
 
   /* 撤销删除：把任务插回它原来的位置。 */
@@ -567,6 +635,12 @@
     clearUndo();
     save();
     render();
+    // 云端恢复（Day 22 软删除留的口子：清 deleted_at，数据一直都在）
+    if (isSynced(task)) {
+      apiSend('POST', '/api/tasks/restore?id=' + task.id).then((r) => {
+        if (!r.ok) showToast(r.status === 0 ? '已本地恢复（离线）' : '云端恢复失败');
+      });
+    }
   }
 
   /* 复制到剪贴板（Day 11）：优先用 Clipboard API（localhost 可用），
@@ -630,6 +704,13 @@
     if (task && trimmed) {
       task.text = trimmed; // 空文字不覆盖 —— 想清走一条任务请用删除
       save();
+      // 云端同步（409 = 云端已有同名任务，本地保留改动、只提示）
+      if (isSynced(task)) {
+        apiSend('PATCH', '/api/tasks?id=' + task.id, { text: trimmed }).then((r) => {
+          if (r.status === 409) showToast('云端已有这个任务名');
+          else if (!r.ok) showToast(r.status === 0 ? '已本地保存（离线）' : '云端同步失败');
+        });
+      }
     }
     render();
   }
@@ -704,7 +785,7 @@
   el.list.addEventListener('click', (event) => {
     const row = event.target.closest('.task');
     if (!row) return;
-    const id = row.dataset.id;
+    const id = toTaskId(row.dataset.id);
 
     // 编辑态的两个按钮
     if (event.target.closest('.js-save')) {
@@ -752,7 +833,7 @@
   el.list.addEventListener('dragstart', (event) => {
     const li = event.target.closest('.task');
     if (!li || li.classList.contains('is-done')) return; // 已完成的不给拖
-    dragId = li.dataset.id;
+    dragId = toTaskId(li.dataset.id);
     li.classList.add('is-dragging');
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', dragId); // Firefox 必须先塞数据才肯启动拖拽
@@ -792,6 +873,12 @@
       justDroppedId = dragId; // 让落位的那一行弹一下
       save();   // 改完数据立刻存，刷新也不丢
       render(); // 重画：第 1 位变了，「第一件事」跟着更新
+      // 云端同步顺序：全部任务都已同步才发（有离线新建的任务时，排序等下次一起同步）
+      if (tasks.every(isSynced)) {
+        apiSend('POST', '/api/tasks/reorder', { order: tasks.map((t) => t.id) }).then((r) => {
+          if (!r.ok && r.status !== 0) showToast('云端排序失败，刷新后将回到云端顺序');
+        });
+      }
     }
     resetDrag();
   });
@@ -823,7 +910,7 @@
 
     const [moving] = tasks.splice(from, 1); // 先把它从原位置拿出来
 
-    let to = tasks.findIndex((t) => t.id === target.id);
+    let to = tasks.findIndex((t) => t.id === toTaskId(target.id));
     if (to === -1) to = tasks.length;
     if (target.after) to += 1;              // 插到目标后面
 

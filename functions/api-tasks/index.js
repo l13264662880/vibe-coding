@@ -13,6 +13,8 @@
 //   POST /api/tasks         → 新增任务（Day 18）
 //   PATCH /api/tasks?id=N   → 修改任务字段（Day 22，白名单 text/done/due/estimate）
 //   DELETE /api/tasks?id=N  → 软删除任务（Day 22，置 deleted_at，可找回）
+//   POST /api/tasks/restore?id=N → 恢复软删除（撤销删除用，幂等）
+//   POST /api/tasks/reorder      → 批量重排 position（拖拽排序用，body {order:[id...]})
 //
 // 契约（路径 / 字段 / 返回形状）见 api-contract.md，重构不许动它。
 
@@ -89,6 +91,8 @@ const server = http.createServer(async (req, res) => {
   // 网关可能保留完整路径、也可能剥离前缀，因此只判断「结尾是否是 /first」。
   const path = (req.url || '/').split('?')[0];
   const isFirst = path.endsWith('/first');
+  const isFirstRestore = path.endsWith('/restore'); // POST /api/tasks/restore
+  const isFirstReorder = path.endsWith('/reorder'); // POST /api/tasks/reorder
 
   // Day 23 余力加练：统一请求日志——响应真正发出时记「方法 路径 → 状态码」
   res.on('finish', () => {
@@ -117,6 +121,15 @@ const server = http.createServer(async (req, res) => {
       // 代码审查 #8：默认只取 100 条，显式 limit 也封顶 100——防全量拉取拖慢加载
       let n = 100;
       if (rawLimit) n = Math.max(1, Math.min(100, parseInt(rawLimit, 10) || 20));
+      // 契约对齐：/api/tasks 和 /api/tasks/first 以外的 GET 路径一律 404。
+      // 网关传来的 path 形态有变异（可能剥前缀、可能带尾斜杠），所以：
+      // 只在「明确指向别处」时才 404，根路径 / 或空串视为基路径放行。
+      const cleanPath = path.replace(/\/+$/, '');
+      if (!isFirst && !cleanPath.endsWith('/tasks') && cleanPath !== '' && cleanPath !== '/') {
+        log('GET 路径不存在', path);
+        send(res, 404, { ok: false, error: '路径不存在' });
+        return;
+      }
       const data = await db.query(
         `/tasks?select=${db.COLUMNS}&deleted_at=is.null&order=position.asc&limit=${n}`
       );
@@ -125,7 +138,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ---------------- POST 新增任务（Day 18） ----------------
-    if (req.method === 'POST') {
+    // 注意：restore / reorder 也走 POST，已在上面分流，这里只处理「新增」
+    if (req.method === 'POST' && !isFirstRestore && !isFirstReorder) {
       log('收到 POST /api/tasks');
 
       // 1. 读并解析请求体（超限 → 413）
@@ -175,20 +189,37 @@ const server = http.createServer(async (req, res) => {
         send(res, 409, { ok: false, error: '这个任务已经存在了' });
         return;
       }
-      const position = (maxRow.length > 0 ? maxRow[0].position : 0) + 1;
-
-      // 5. 插入 tasks（due / estimate 可选）
-      const inserted = await db.insert(
-        'tasks',
-        {
-          text,
-          position,
-          done: false,
-          due: payload.due || null,
-          estimate: payload.estimate != null ? payload.estimate : null,
-        },
-        db.COLUMNS
-      );
+      // 5. 插入 tasks。position = max+1 有并发窗口（两人同时新增会拿到同一个
+      //    position，撞部分唯一索引）——撞了就重读 max 重插，最多 3 次。
+      let inserted = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        let position;
+        if (attempt === 1) {
+          position = (maxRow.length > 0 ? maxRow[0].position : 0) + 1;
+        } else {
+          log('position 冲突，重试', `attempt=${attempt}`);
+          const retryMax = await db.query(`/tasks?select=position&order=position.desc&limit=1`);
+          position = (retryMax.length > 0 ? retryMax[0].position : 0) + 1;
+        }
+        try {
+          inserted = await db.insert(
+            'tasks',
+            {
+              text,
+              position,
+              done: false,
+              due: payload.due || null,
+              estimate: payload.estimate != null ? payload.estimate : null,
+            },
+            db.COLUMNS
+          );
+          break; // 插入成功，跳出重试循环
+        } catch (e) {
+          const isUniqueConflict = /23505|unique/i.test(e.message);
+          if (isUniqueConflict && attempt < 3) continue; // 撞了索引，换下个 position 再试
+          throw e; // 其他错误照常往上抛
+        }
+      }
       const newTask = inserted[0];
       log('插入成功', `id=${newTask.id}`, `position=${newTask.position}`, `text=${text}`);
 
@@ -202,6 +233,114 @@ const server = http.createServer(async (req, res) => {
 
       // 7. 返回新任务（形状对齐 api-contract.md 的读接口）
       send(res, 200, { ok: true, data: newTask });
+      return;
+    }
+
+    // ---------------- POST 恢复软删除任务（撤销删除用） ----------------
+    // 用法：POST /api/tasks/restore?id=<id>。把 deleted_at 清空（Day 22 软删除留的口子），
+    // 并写 restored 事件。对未删除的任务重复调用是幂等的（直接返回 200）。
+    if (req.method === 'POST' && isFirstRestore) {
+      log('收到 POST /api/tasks/restore');
+
+      const u = new URL(req.url, 'http://localhost');
+      const id = u.searchParams.get('id');
+      if (!validId(id)) {
+        send(res, 404, { ok: false, error: '任务不存在' });
+        return;
+      }
+
+      // 1. 找这一行（不过滤 deleted_at，被删的也能找到）
+      const found = await db.query(
+        `/tasks?select=id,deleted_at&id=eq.${encodeURIComponent(id)}`
+      );
+      if (found.length === 0) {
+        send(res, 404, { ok: false, error: '任务不存在' });
+        return;
+      }
+
+      // 2. 已是未删除状态 → 幂等返回；否则清空 deleted_at
+      if (found[0].deleted_at == null) {
+        const active = await db.query(
+          `/tasks?select=${db.COLUMNS}&id=eq.${encodeURIComponent(id)}`
+        );
+        send(res, 200, { ok: true, data: active[0] || null, message: '任务本来就在，无需恢复' });
+        return;
+      }
+      const updated = await db.update('tasks', id, { deleted_at: null }, db.COLUMNS);
+      if (updated.length === 0) {
+        send(res, 404, { ok: false, error: '任务不存在' });
+        return;
+      }
+      log('恢复成功', `id=${id}`);
+
+      // 3. 写 restored 事件，失败不阻断
+      try {
+        await db.insert('task_events', { task_id: Number(id), event_type: 'restored' });
+      } catch (e) {
+        log('事件记录失败（主流程已成功）', e.message);
+      }
+
+      send(res, 200, { ok: true, data: updated[0] });
+      return;
+    }
+
+    // ---------------- POST 批量重排（拖拽排序用） ----------------
+    // 用法：POST /api/tasks/reorder，body { "order": [id, id, ...] }，
+    // order 是任务 id 的完整顺序数组，后端按数组下标写 position（第 1 位 = position 1）。
+    // 两段式写入（先临时负数再归位），避开部分唯一索引的「交换冲突」。
+    if (req.method === 'POST' && isFirstReorder) {
+      log('收到 POST /api/tasks/reorder');
+
+      const raw = await readBody(req);
+      if (raw === null) {
+        send(res, 413, { ok: false, error: '请求内容太大了' });
+        return;
+      }
+      let payload;
+      try {
+        payload = JSON.parse(raw || '{}');
+      } catch {
+        send(res, 400, { ok: false, error: '请求体不是合法的 JSON' });
+        return;
+      }
+      const order = Array.isArray(payload.order) ? payload.order : [];
+      if (order.length === 0 || !order.every((x) => /^\d+$/.test(String(x)))) {
+        send(res, 400, { ok: false, error: 'order 必须是非空的任务 id 数组' });
+        return;
+      }
+
+      // 1. 现存未删除任务里，校验 order 覆盖了全部（不覆盖的话重排会漏任务）
+      const existing = await db.query(`/tasks?select=id&deleted_at=is.null`);
+      const existingIds = existing.map((r) => String(r.id)).sort().join(',');
+      const orderIds = order.map(String).sort().join(',');
+      if (orderIds !== existingIds) {
+        log('reorder 列表与现有任务不一致');
+        send(res, 409, { ok: false, error: 'order 列表和现有任务对不上，请刷新后重试' });
+        return;
+      }
+
+      // 2. 两段式写入：先全部挪到 10000+i 的临时高位（Day 16 约束 position >= 1，
+      //    负数会撞 CHECK；高位互不相同也不与现有 1~99 冲突），再按下标归位 1,2,3...
+      for (let i = 0; i < order.length; i++) {
+        await db.update('tasks', order[i], { position: 10000 + i }, 'id');
+      }
+      const changed = [];
+      for (let i = 0; i < order.length; i++) {
+        const updated = await db.update('tasks', order[i], { position: i + 1 }, 'id');
+        if (updated.length > 0) changed.push(Number(order[i]));
+      }
+      log('重排完成', `count=${changed.length}`);
+
+      // 3. 每个被挪动的任务写一条 reordered 事件（best-effort）
+      for (const tid of changed) {
+        try {
+          await db.insert('task_events', { task_id: tid, event_type: 'reordered' });
+        } catch (e) {
+          log('事件记录失败（主流程已成功）', e.message);
+        }
+      }
+
+      send(res, 200, { ok: true, data: { reordered: changed.length } });
       return;
     }
 

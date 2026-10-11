@@ -325,12 +325,44 @@ curl -X DELETE "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/ta
 
 ---
 
-## 7. 错误约定（读写通用）
+## 7. 恢复软删除任务 `POST /api/tasks/restore?id=<id>`
+
+> Day 23+ 前端写同步时新增。撤销删除用：清空 `deleted_at`，并写 `restored` 事件。对未删除的任务重复调用是幂等的（返回 200，带 message）。
+
+| 项 | 值 |
+| --- | --- |
+| 方法 | `POST` |
+| 路径 | `/api/tasks/restore?id=<id>` |
+| 鉴权 | `X-App-Token` 请求头 |
+| 请求体 | 无 |
+
+成功：`{ "ok": true, "data": { ...恢复后的任务对象 } }`（幂等调用额外带 `"message": "任务本来就在，无需恢复"`）。
+错误：id 不存在 → `404 任务不存在`。
+
+---
+
+## 8. 批量重排 `POST /api/tasks/reorder`
+
+> Day 23+ 前端写同步时新增。拖拽排序用：body `{ "order": [id, id, ...] }`（完整顺序数组），后端按数组下标写 `position`（第 1 位 = position 1）。内部两段式写入（先临时负数再归位），避开部分唯一索引的交换冲突。
+
+| 项 | 值 |
+| --- | --- |
+| 方法 | `POST` |
+| 路径 | `/api/tasks/reorder` |
+| 鉴权 | `X-App-Token` 请求头 |
+| 请求体 | `{ "order": [<id>, ...] }`，非空正整数数组 |
+
+成功：`{ "ok": true, "data": { "reordered": <被挪动的任务数> } }`，每个被挪动的任务写一条 `reordered` 事件。
+错误：`order` 为空/含非数字 → `400 order 必须是非空的任务 id 数组`；`order` 与现存未删除任务集合不一致 → `409 order 列表和现有任务对不上，请刷新后重试`。
+
+---
+
+## 9. 错误约定（读写通用）
 
 | 场景 | 状态码 | 说明 |
 | --- | --- | --- |
 | 未带 `X-App-Token` 或令牌错误 | `401` | 所有 `/api/*` 接口统一鉴权（Day 23+ 代码审查新增） |
-| 路径不存在 | `404` | 请求了 `/api/tasks`、`/api/tasks/first` 以外的路径 |
+| 路径不存在 | `404` | `GET` 请求了 `/api/tasks`、`/api/tasks/first` 以外的路径（Day 23+ 起对齐契约，此前会错误地返回全列表） |
 | 方法不支持 | `405` | 只支持 GET、POST、PATCH、DELETE |
 | 请求体超过 10KB | `413` | POST / PATCH 的请求体大小上限 |
 | 服务内部异常 | `500` | 云函数或数据库网关出错（返回统一中文提示） |
