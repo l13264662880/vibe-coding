@@ -12,6 +12,9 @@
 | 数据格式 | JSON，响应头 `Content-Type: application/json; charset=utf-8` |
 | 时间格式 | ISO 8601，UTC（例：`2026-10-04T10:49:46.987Z`） |
 | 字符编码 | UTF-8 |
+| **鉴权**（Day 23+ 代码审查新增） | 所有 `/api/*` 请求须带请求头 `X-App-Token: <站点访问令牌>`；缺失或错误 → `401 { "ok": false, "error": "访问未授权" }`。令牌值在后端 `.env` 的 `APP_ACCESS_TOKEN` 与前端 JS 常量各存一份（防扫描器级别的过渡方案，用户系统上线后替换） |
+| **请求体大小** | 上限 10KB，超限 → `413 { "ok": false, "error": "请求内容太大了" }` |
+| **跨域（CORS）** | CloudBase 网关对 `*.tcloudbaseapp.com` 站点 Origin 自动处理：GET/POST/PATCH/DELETE 的 OPTIONS 预检由网关代答 204 并回显 `Access-Control-Allow-*`（含自定义头 `X-App-Token`），**云函数代码无需处理 OPTIONS**。其他 Origin 的跨域请求会被浏览器拦截（符合预期） |
 
 ---
 
@@ -73,8 +76,8 @@ curl "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/health"
 | --- | --- |
 | 方法 | `GET` |
 | 路径 | `/api/tasks` |
-| 鉴权 | 无（公开） |
-| 查询参数 | `limit`（可选，整数，限制返回条数） |
+| 鉴权 | `X-App-Token` 请求头 |
+| 查询参数 | `limit`（可选，整数 1–100；缺省默认 100，超 100 按 100 封顶） |
 
 ### 2.1 成功响应（HTTP 200）
 
@@ -203,9 +206,9 @@ curl "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks/first"
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `text` | string | 是 | 任务文字，trim 后不能为空 |
-| `due` | string (date) | 否 | 截止日期，`YYYY-MM-DD` |
-| `estimate` | integer | 否 | 预估耗时（分钟），`>= 0` |
+| `text` | string | 是 | 任务文字，trim 后不能为空，**最长 500 字** |
+| `due` | string (date) | 否 | 截止日期，必须匹配 `YYYY-MM-DD`，可传 `null` |
+| `estimate` | integer | 否 | 预估耗时（分钟），不小于 0 的整数，可传 `null` |
 
 ### 4.2 成功响应（HTTP 200）
 
@@ -223,8 +226,11 @@ curl "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tasks/first"
 | 场景 | 状态码 | 返回 |
 | --- | --- | --- |
 | 缺 `text` / `text` 纯空白 | `400` | `{ "ok": false, "error": "任务内容不能为空" }` |
+| `text` 超过 500 字 | `400` | `{ "ok": false, "error": "任务内容不能超过 500 个字" }` |
+| `due` / `estimate` 类型不合法 | `400` | `due 的格式应为 YYYY-MM-DD` / `estimate 应为不小于 0 的整数（分钟）` |
 | 相同 `text` 的未删除任务已存在 | `409` | `{ "ok": false, "error": "这个任务已经存在了" }` |
 | 请求体不是合法 JSON | `400` | `{ "ok": false, "error": "请求体不是合法的 JSON" }` |
+| 请求体超过 10KB | `413` | `{ "ok": false, "error": "请求内容太大了" }` |
 
 ### 4.4 调用示例
 
@@ -244,17 +250,17 @@ curl -X POST "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/task
 | --- | --- |
 | 方法 | `PATCH` |
 | 路径 | `/api/tasks?id=<id>` |
-| 鉴权 | 无（公开） |
+| 鉴权 | `X-App-Token` 请求头 |
 | 请求体 | JSON：`text` / `done` / `due` / `estimate` 的任意组合（至少 1 个） |
 
 ### 5.1 可修改字段（白名单）
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `text` | string | 任务文字，trim 后不能为空；改后不能与其他未删除任务重名 |
-| `done` | boolean | 完成/未完成 |
-| `due` | string (date) | 截止日期，可传 `null` 清空 |
-| `estimate` | integer | 预估耗时（分钟），可传 `null` 清空 |
+| `text` | string | 任务文字，trim 后不能为空、最长 500 字；改后不能与其他未删除任务重名 |
+| `done` | boolean | 完成/未完成（必须是布尔值） |
+| `due` | string (date) | 截止日期，必须匹配 `YYYY-MM-DD`，可传 `null` 清空 |
+| `estimate` | integer | 预估耗时（分钟），不小于 0 的整数，可传 `null` 清空 |
 
 > `position` **不在白名单**：排序走专门的 reorder 逻辑（后续版本），不允许改字段时顺手挪优先级。
 
@@ -268,11 +274,13 @@ curl -X POST "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/task
 
 | 场景 | 状态码 | 返回 |
 | --- | --- | --- |
-| 缺 `id` 参数 | `400` | `{ "ok": false, "error": "缺少任务 id，用法：PATCH /api/tasks?id=<id>" }` |
+| 缺 `id` 参数 / id 不是正整数 | `404` | `{ "ok": false, "error": "任务不存在" }` |
 | 请求体无可修改字段 / 非法 JSON | `400` | `没有可修改的字段（只支持 text / done / due / estimate）` / `请求体不是合法的 JSON` |
-| `text` 为空 | `400` | `{ "ok": false, "error": "任务内容不能为空" }` |
+| `done` / `due` / `estimate` 类型不合法 | `400` | `done 必须是 true 或 false` / `due 的格式应为 YYYY-MM-DD` / `estimate 应为不小于 0 的整数（分钟）` |
+| `text` 为空 / 超 500 字 | `400` | `任务内容不能为空` / `任务内容不能超过 500 个字` |
 | 改后的 `text` 与其他任务重名 | `409` | `{ "ok": false, "error": "这个任务已经存在了" }` |
 | id 不存在（或已删除） | `404` | `{ "ok": false, "error": "任务不存在" }` |
+| 请求体超过 10KB | `413` | `{ "ok": false, "error": "请求内容太大了" }` |
 
 ### 5.4 调用示例
 
@@ -291,7 +299,7 @@ curl -X PATCH "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tas
 | --- | --- |
 | 方法 | `DELETE` |
 | 路径 | `/api/tasks?id=<id>` |
-| 鉴权 | 无（公开） |
+| 鉴权 | `X-App-Token` 请求头 |
 | 请求体 | 无 |
 
 ### 6.1 成功响应（HTTP 200）
@@ -306,7 +314,7 @@ curl -X PATCH "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/tas
 
 | 场景 | 状态码 | 返回 |
 | --- | --- | --- |
-| 缺 `id` 参数 | `400` | `{ "ok": false, "error": "缺少任务 id，用法：DELETE /api/tasks?id=<id>" }` |
+| 缺 `id` 参数 / id 不是正整数 | `404` | `{ "ok": false, "error": "任务不存在" }` |
 | id 不存在（或已删除过） | `404` | `{ "ok": false, "error": "任务不存在" }` |
 
 ### 6.3 调用示例
@@ -321,7 +329,9 @@ curl -X DELETE "https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com/api/ta
 
 | 场景 | 状态码 | 说明 |
 | --- | --- | --- |
+| 未带 `X-App-Token` 或令牌错误 | `401` | 所有 `/api/*` 接口统一鉴权（Day 23+ 代码审查新增） |
 | 路径不存在 | `404` | 请求了 `/api/tasks`、`/api/tasks/first` 以外的路径 |
 | 方法不支持 | `405` | 只支持 GET、POST、PATCH、DELETE |
-| 服务内部异常 | `500` | 云函数或数据库网关出错 |
+| 请求体超过 10KB | `413` | POST / PATCH 的请求体大小上限 |
+| 服务内部异常 | `500` | 云函数或数据库网关出错（返回统一中文提示） |
 

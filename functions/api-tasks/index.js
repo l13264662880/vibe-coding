@@ -32,11 +32,56 @@ function log(...args) {
   console.log(`[${new Date().toISOString()}]`, ...args);
 }
 
-// 读请求体（POST 的 body 要手动读流）
+// 读请求体（POST/PATCH 的 body 要手动读流）。
+// 代码审查 #2：限制请求体大小（10KB 对本业务绰绰有余），
+// 超限返回 null，由调用方回 413——防止超大 body 打爆云函数内存。
+const BODY_LIMIT = 10 * 1024;
 async function readBody(req) {
   let raw = '';
-  for await (const chunk of req) raw += chunk;
+  for await (const chunk of req) {
+    raw += chunk;
+    if (raw.length > BODY_LIMIT) {
+      // 注意：不能在这里 req.destroy()——销毁流会让 for-await 抛未捕获异常
+      // 把进程带走（实测 ret 200406）。正确做法：停止累积、直接返回，
+      // 让调用方回 413 后由网关关闭连接。
+      return null;
+    }
+  }
   return raw;
+}
+
+// 代码审查 #1：共享密钥鉴权。令牌放在 .env（APP_ACCESS_TOKEN），
+// 前端请求带 X-App-Token 头。这是用户系统上线前的过渡方案——
+// 值在前端 JS 里可见，只能挡住扫 URL 的脚本，挡不住存心看源码的人。
+const APP_TOKEN = process.env.APP_ACCESS_TOKEN || '';
+
+// 校验请求头里的令牌；不匹配（或服务端没配）一律 401，宁紧勿松
+function authorized(req) {
+  if (!APP_TOKEN) return false; // 环境变量没注入时直接拒绝，fail closed
+  return req.headers['x-app-token'] === APP_TOKEN;
+}
+
+// 代码审查 #6：id 必须是正整数字符串，垃圾值不打网关、直接 404
+function validId(id) {
+  return typeof id === 'string' && /^\d+$/.test(id);
+}
+
+// 代码审查 #5：字段类型校验。返回错误文案（null = 合法）。
+function validateFieldTypes(patch) {
+  if (patch.done !== undefined && typeof patch.done !== 'boolean') {
+    return 'done 必须是 true 或 false';
+  }
+  if (patch.due !== undefined && patch.due !== null && !/^\d{4}-\d{2}-\d{2}$/.test(patch.due)) {
+    return 'due 的格式应为 YYYY-MM-DD';
+  }
+  if (
+    patch.estimate !== undefined &&
+    patch.estimate !== null &&
+    (!Number.isInteger(patch.estimate) || patch.estimate < 0)
+  ) {
+    return 'estimate 应为不小于 0 的整数（分钟）';
+  }
+  return null;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -51,6 +96,13 @@ const server = http.createServer(async (req, res) => {
   });
 
   try {
+    // ---------------- 鉴权（代码审查 #1） ----------------
+    if (!authorized(req)) {
+      log('鉴权失败：缺少或错误的 X-App-Token');
+      send(res, 401, { ok: false, error: '访问未授权' });
+      return;
+    }
+
     // ---------------- GET 读（Day 17） ----------------
     if (req.method === 'GET') {
       if (isFirst) {
@@ -62,13 +114,11 @@ const server = http.createServer(async (req, res) => {
       }
       const u = new URL(req.url, 'http://localhost');
       const rawLimit = u.searchParams.get('limit');
-      let limitQ = '';
-      if (rawLimit) {
-        const n = Math.max(1, parseInt(rawLimit, 10) || 20);
-        limitQ = `&limit=${n}`;
-      }
+      // 代码审查 #8：默认只取 100 条，显式 limit 也封顶 100——防全量拉取拖慢加载
+      let n = 100;
+      if (rawLimit) n = Math.max(1, Math.min(100, parseInt(rawLimit, 10) || 20));
       const data = await db.query(
-        `/tasks?select=${db.COLUMNS}&deleted_at=is.null&order=position.asc${limitQ}`
+        `/tasks?select=${db.COLUMNS}&deleted_at=is.null&order=position.asc&limit=${n}`
       );
       send(res, 200, { ok: true, data });
       return;
@@ -78,8 +128,13 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST') {
       log('收到 POST /api/tasks');
 
-      // 1. 读并解析请求体
+      // 1. 读并解析请求体（超限 → 413）
       const raw = await readBody(req);
+      if (raw === null) {
+        log('请求体超过大小限制');
+        send(res, 413, { ok: false, error: '请求内容太大了' });
+        return;
+      }
       let payload;
       try {
         payload = JSON.parse(raw || '{}');
@@ -89,29 +144,40 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // 2. 校验必填字段 text（防「错误输入」：空文本）
+      // 2. 校验必填字段 text（防「错误输入」：空文本）；顺带限制长度，防写进超长文本
       const text = typeof payload.text === 'string' ? payload.text.trim() : '';
       if (!text) {
         log('校验失败：任务内容为空');
         send(res, 400, { ok: false, error: '任务内容不能为空' });
         return;
       }
+      if (text.length > 500) {
+        send(res, 400, { ok: false, error: '任务内容不能超过 500 个字' });
+        return;
+      }
 
-      // 3. 查重（防「重复提交」：相同 text 的未删除任务已存在）
-      const dup = await db.query(
-        `/tasks?select=id&text=eq.${encodeURIComponent(text)}&deleted_at=is.null`
-      );
+      // 3. 可选字段类型校验（代码审查 #5：due/estimate 不再无脑透传）
+      const typeErr = validateFieldTypes(payload);
+      if (typeErr) {
+        log('校验失败：', typeErr);
+        send(res, 400, { ok: false, error: typeErr });
+        return;
+      }
+
+      // 4. 查重 + 取最大 position：两次查询互不依赖，并行发（代码审查 #7，
+      //    原 4 次串行往返 → 3 次，新增接口耗时立省一段）
+      const [dup, maxRow] = await Promise.all([
+        db.query(`/tasks?select=id&text=eq.${encodeURIComponent(text)}&deleted_at=is.null`),
+        db.query(`/tasks?select=position&order=position.desc&limit=1`),
+      ]);
       if (dup.length > 0) {
         log('校验失败：重复提交', text);
         send(res, 409, { ok: false, error: '这个任务已经存在了' });
         return;
       }
-
-      // 4. 算 position = 当前最大 position + 1（新任务加到列表末尾）
-      const maxRow = await db.query(`/tasks?select=position&order=position.desc&limit=1`);
       const position = (maxRow.length > 0 ? maxRow[0].position : 0) + 1;
 
-      // 5. 插入 tasks（due / estimate 可选，透传）
+      // 5. 插入 tasks（due / estimate 可选）
       const inserted = await db.insert(
         'tasks',
         {
@@ -149,13 +215,18 @@ const server = http.createServer(async (req, res) => {
 
       const u = new URL(req.url, 'http://localhost');
       const id = u.searchParams.get('id');
-      if (!id) {
-        send(res, 400, { ok: false, error: '缺少任务 id，用法：PATCH /api/tasks?id=<id>' });
+      if (!validId(id)) {
+        send(res, 404, { ok: false, error: '任务不存在' });
         return;
       }
 
-      // 1. 解析请求体
+      // 1. 解析请求体（超限 → 413）
       const raw = await readBody(req);
+      if (raw === null) {
+        log('请求体超过大小限制');
+        send(res, 413, { ok: false, error: '请求内容太大了' });
+        return;
+      }
       let payload;
       try {
         payload = JSON.parse(raw || '{}');
@@ -180,12 +251,24 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // 3. 改 text 的话：不能为空，且不能和其他未删除任务重名
+      // 2.5 字段类型校验（代码审查 #5）
+      const typeErr = validateFieldTypes(patch);
+      if (typeErr) {
+        log('校验失败：', typeErr);
+        send(res, 400, { ok: false, error: typeErr });
+        return;
+      }
+
+      // 3. 改 text 的话：不能为空（长度同 POST 限 500），且不能和其他未删除任务重名
       if (patch.text !== undefined) {
         patch.text = typeof patch.text === 'string' ? patch.text.trim() : '';
         if (!patch.text) {
           log('校验失败：任务内容为空');
           send(res, 400, { ok: false, error: '任务内容不能为空' });
+          return;
+        }
+        if (patch.text.length > 500) {
+          send(res, 400, { ok: false, error: '任务内容不能超过 500 个字' });
           return;
         }
         const dup = await db.query(
@@ -231,8 +314,8 @@ const server = http.createServer(async (req, res) => {
 
       const u = new URL(req.url, 'http://localhost');
       const id = u.searchParams.get('id');
-      if (!id) {
-        send(res, 400, { ok: false, error: '缺少任务 id，用法：DELETE /api/tasks?id=<id>' });
+      if (!validId(id)) {
+        send(res, 404, { ok: false, error: '任务不存在' });
         return;
       }
 

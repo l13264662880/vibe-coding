@@ -31,10 +31,20 @@ function log(...args) {
 }
 
 async function readBody(req) {
+  // 代码审查 #2：请求体限 10KB，超限返回 null（主题值最大几十字节，绰绰有余）
   let raw = '';
-  for await (const chunk of req) raw += chunk;
+  for await (const chunk of req) {
+    raw += chunk;
+    if (raw.length > 10 * 1024) {
+      // 不 req.destroy()（会崩进程，见 api-tasks 同处注释）；停止累积即可
+      return null;
+    }
+  }
   return raw;
 }
+
+// 代码审查 #1：共享密钥鉴权（与 api-tasks 同一套令牌），fail closed
+const APP_TOKEN = process.env.APP_ACCESS_TOKEN || '';
 
 // PostgREST 网关请求的统一封装
 async function rdb(path, options) {
@@ -59,6 +69,13 @@ async function rdb(path, options) {
 
 const server = http.createServer(async (req, res) => {
   try {
+    // ---------------- 鉴权（代码审查 #1） ----------------
+    if (!APP_TOKEN || req.headers['x-app-token'] !== APP_TOKEN) {
+      log('鉴权失败：缺少或错误的 X-App-Token');
+      send(res, 401, { ok: false, error: '访问未授权' });
+      return;
+    }
+
     // ---------------- GET：读当前主题 ----------------
     if (req.method === 'GET') {
       const rows = await rdb('/app_state?select=value&key=eq.theme&limit=1');
@@ -70,6 +87,10 @@ const server = http.createServer(async (req, res) => {
     // ---------------- POST：写入当前主题（upsert） ----------------
     if (req.method === 'POST') {
       const raw = await readBody(req);
+      if (raw === null) {
+        send(res, 413, { ok: false, error: '请求内容太大了' });
+        return;
+      }
       let payload;
       try { payload = JSON.parse(raw || '{}'); } catch { payload = null; }
 
@@ -93,8 +114,9 @@ const server = http.createServer(async (req, res) => {
 
     send(res, 405, { ok: false, error: '只支持 GET 和 POST' });
   } catch (e) {
-    log('异常', e.message);
-    send(res, 500, { ok: false, error: e.message });
+    // 代码审查 #4：与 api-tasks 统一——用户只看中文，细节进服务端日志
+    log('异常（用户已收到中文提示，以下为细节）', e.message);
+    send(res, 500, { ok: false, error: '服务器开小差了，请稍后再试' });
   }
 });
 

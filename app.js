@@ -119,13 +119,17 @@
 
   const DATA_SOURCE = 'api'; // Day 17 接真实接口（原计划 Day 23，因 Day 15 加后端提前）
   const API_BASE = 'https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com';
+  // 站点访问令牌（代码审查 #1）：与后端 .env 里的 APP_ACCESS_TOKEN 配对。
+  // 写在前端 JS 里只是「挡扫描器」级别的防护，真正的用户系统是后续课题。
+  const APP_TOKEN = '81ad6640e81a92f614190806e95eac7938463655a73b33e7';
+  const apiHeaders = () => ({ 'X-App-Token': APP_TOKEN });
 
   function loadFromSource() {
     if (DATA_SOURCE === 'api') {
       // 调 /api/tasks 读真实数据；字段对齐前端任务对象：
       //   接口返回 {ok, data:[{id,text,position,done,due,estimate}]}
       //   前端任务对象是 {id,text,done,due,estimate}，position 去掉（数组顺序即优先级）
-      return fetch(`${API_BASE}/api/tasks`)
+      return fetch(`${API_BASE}/api/tasks`, { headers: apiHeaders() })
         .then((r) => {
           if (!r.ok) throw new Error(`接口返回 ${r.status}`);
           return r.json();
@@ -268,9 +272,13 @@
     });
 
     el.list.innerHTML = '';
+    // 代码审查 #9：先在 Fragment 里拼好整段，再一次性插入——
+    // 每行少一次真实 DOM 挂载，任务多时重绘更快
+    const frag = document.createDocumentFragment();
     filtered.forEach((task, index) => {
-      el.list.appendChild(buildRow(task, index));
+      frag.appendChild(buildRow(task, index));
     });
+    el.list.appendChild(frag);
 
     // 空状态（区分「本来没任务」和「筛选无结果」）+ 数量提示
     renderEmpty(ordered.length, filtered.length);
@@ -682,9 +690,14 @@
     render();
   });
 
+  /* 搜索框实时过滤（代码审查 #9：加 150ms 防抖，每敲一个字不再全量重绘） */
+  let searchTimer = null;
   el.filterSearch.addEventListener('input', () => {
-    filterQuery = el.filterSearch.value.trim();
-    render();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      filterQuery = el.filterSearch.value.trim();
+      render();
+    }, 150);
   });
 
   /* 任务行上的按钮统一用事件委托处理（行是动态生成的） */

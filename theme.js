@@ -21,6 +21,9 @@
   const SPRITE_KEY = 'sprite-theme';    // 精灵换装联动键
   // 主题跨端同步的云端 API（与 app.js 同一网关）
   const API_BASE = 'https://yuanjian-d5gdhcntg91022662.service.tcloudbase.com';
+  // 站点访问令牌（代码审查 #1）：与 app.js 同值，后端 .env 的 APP_ACCESS_TOKEN 配对
+  const APP_TOKEN = '81ad6640e81a92f614190806e95eac7938463655a73b33e7';
+  const apiHeaders = () => ({ 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN });
 
   /* 七套风格：id 对应 data-theme，swatch 给选择器画色块预览 */
   const STYLES = [
@@ -52,7 +55,7 @@
   function syncThemeToServer(id) {
     fetch(`${API_BASE}/api/theme`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: apiHeaders(),
       body: JSON.stringify({ theme: id }),
     }).catch(() => { /* 离线/网关异常时静默 */ });
   }
@@ -61,7 +64,7 @@
   // 只在启动时拉一次，不做轮询——免费版资源点扛不住轮询频率。
   // 其他端改了主题时，本端刷新页面即可同步；实时推送是后续课题。
   function pullThemeFromServer() {
-    fetch(`${API_BASE}/api/theme`)
+    fetch(`${API_BASE}/api/theme`, { headers: { 'X-App-Token': APP_TOKEN } })
       .then((r) => (r.ok ? r.json() : null))
       .then((payload) => {
         if (!payload || !payload.ok) return;
