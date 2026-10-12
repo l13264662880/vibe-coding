@@ -107,3 +107,16 @@ py -m http.server 8000
 - 不引入后端和数据库（PRD 4.1 已砍：单人使用，localStorage 够用）。
 - 数据流：用户操作产生数据 → 存进 localStorage → 打开页面读回渲染。
 - 桌面小工具形态已规划、暂缓：Day 7 先交网页，之后加桌面外壳（详见 `TECH_DESIGN.md` 第 4 节）。
+## 发布前检查（Day 25）
+
+上线/部署前跑一条命令，把「公网、接口、密钥、语法、冒烟」一次过完，防止带着坏状态发布：
+
+```bash
+python tools/pre_release_check.py          # 全量 9 项
+python tools/pre_release_check.py --quick  # 最小版：公网 + 密钥
+```
+
+- 退出码 `0` = 全部通过；`1` = 有 FAIL（明细在汇总区，修完重跑）。
+- 检查目标 URL 集中在脚本顶部 `SITE_URL / API_BASE`，换环境只改那两行。
+- 想加检查项：加一个 `check_xxx()` 并登记进 `FULL_CHECKS`。
+- Skill 定义（触发词/判定标准）在 `.workbuddy/skills/发布前检查/SKILL.md`。

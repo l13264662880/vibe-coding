@@ -1,0 +1,14 @@
+===== 发布前检查（全量）=====
+[PASS] 公网首页可访问 | 200 https://yuanjian-d5gdhcntg91022662-1500297151.tcloudbaseapp.com/
+[PASS] 密钥扫描：.env 未入库
+[FAIL] 密钥扫描：源码无硬编码真值 | tools/_day25_leak_demo.js 命中[GitHub PAT]
+[PASS] 健康接口 /api/health | 200 {"status":"ok","service":"智伴 PriorityPal","time":"2026-10-12T11:59:35.183Z"}
+[PASS] 任务接口 GET /api/tasks | 200
+[PASS] 云函数语法检查（4 个） | node --check 全过
+[PASS] 桌宠冒烟测试 | SMOKE OK: 渲染/换装/5动画/持久化 全部通过
+[FAIL] 工作区已提交（提醒） | 3 个未提交改动
+[PASS] README 存在且含进度
+
+===== 汇总：7/9 通过 =====
+FAIL 密钥扫描：源码无硬编码真值 | tools/_day25_leak_demo.js 命中[GitHub PAT]
+FAIL 工作区已提交（提醒） | 3 个未提交改动
