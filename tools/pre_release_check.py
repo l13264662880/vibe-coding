@@ -11,10 +11,13 @@
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import urllib.request
 import urllib.error
+
+shutil_which = shutil.which  # 别名，避免与下方局部变量混淆
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -134,15 +137,25 @@ def check_secrets():
     report("密钥扫描：源码无硬编码真值", not hits, "; ".join(hits[:3]))
 
 
+def _node_bin():
+    """定位 node：先 PATH，找不到回退到 WorkBuddy 托管 node（本机实测路径）。"""
+    found = shutil_which("node")
+    if found:
+        return found
+    fallback = r"C:\Users\L1326\.workbuddy\binaries\node\versions\22.22.2-6\node.exe"
+    return fallback if os.path.exists(fallback) else "node"
+
+
 def check_functions_syntax():
     """云函数 JS 语法必须全部通过 node --check。"""
     fns = []
     for root, _dirs, files in os.walk(os.path.join(REPO, "functions")):
         fns += [os.path.join(root, f) for f in files if f.endswith(".js")]
     bad = []
+    node = _node_bin()
     for f in fns:
         r = subprocess.run(
-            ["node", "--check", f], cwd=REPO, capture_output=True, text=True
+            [node, "--check", f], cwd=REPO, capture_output=True, text=True
         )
         if r.returncode != 0:
             bad.append(os.path.basename(f))

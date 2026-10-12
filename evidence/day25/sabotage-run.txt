@@ -12,3 +12,12 @@
 ===== 汇总：7/9 通过 =====
 FAIL 密钥扫描：源码无硬编码真值 | tools/_day25_leak_demo.js 命中[GitHub PAT]
 FAIL 工作区已提交（提醒） | 3 个未提交改动
+
+===== 用户终端实跑补充（2026-10-12 20:37，CMD 环境）=====
+[FAIL] 密钥扫描：源码无硬编码真值 | tools/_day25_shot_demo.js 命中[GitHub PAT]
+[FAIL] check_functions_syntax | 检查器异常: FileNotFoundError(2, '系统找不到指定的文件。', None, 2, None)
+汇总: 6/9 通过
+
+上图同时暴露检查器自身问题：subprocess 调 node 时用户 CMD 环境 PATH 里没有 node
+（Bash 环境有）→ FileNotFoundError。已修：_node_bin() 先 shutil.which 再回退
+到本机托管 node 绝对路径。修复后语法检查 PASS。
