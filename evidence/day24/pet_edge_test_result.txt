@@ -1,0 +1,26 @@
+[PASS] E1 part_id 路径穿越 | 解析路径 E:\wordbuddy工作空间\my-site\pet_app\assets\parts\head\head_a.png
+[PASS] E2 part_id=None | 返回 False
+[PASS] E2 part_id=123 | 返回 False
+[PASS] E2 part_id={'a': 1} | 返回 False
+[PASS] E2 part_id=['x'] | 返回 False
+[PASS] E3 气泡 ''
+[PASS] E3 气泡 'None'
+[PASS] E3 气泡 '喵喵喵喵喵喵喵喵喵喵喵喵'
+[PASS] E3 气泡 'line1\nline2\n'
+[PASS] E3 气泡 '🎉🎉🎉'
+[PASS] E3 气泡 '<script>aler'
+[PASS] E4 60 次状态乱切 | 最终 idle
+[PASS] E5 连点/睡眠/唤醒混合 | 最终 jump
+[PASS] E6 配置[空文件]
+[PASS] E6 配置[JSON数组]
+[PASS] E6 配置[parts是字符串]
+[PASS] E6 配置[pos是字符串]
+[PASS] E6 配置[未知字段]
+[PASS] E6 配置[负scale]
+[PASS] E7 主题 '' | KeyError（有触发路径才会崩）
+[PASS] E7 主题 '   ' | KeyError（有触发路径才会崩）
+[PASS] E7 主题 'xxxxxxxxxx' | KeyError（有触发路径才会崩）
+[PASS] E7 主题 'None' | KeyError（有触发路径才会崩）
+[PASS] E8 零尺寸+极端坐标 | 位置已保存（下次启动钳制见 P3 记录项）
+
+===== 汇总：0 个 FAIL =====

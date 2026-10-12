@@ -167,7 +167,10 @@ const server = http.createServer(async (req, res) => {
       }
 
       // 2. 校验必填字段 text（防「错误输入」：空文本）；顺带限制长度，防写进超长文本
-      const text = typeof payload.text === 'string' ? payload.text.trim() : '';
+      // Day 24 补充测试：先剥掉零宽/不可见字符（\u200B 等能骗过 trim 造出隐形任务）
+      const text = (typeof payload.text === 'string' ? payload.text : '')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .trim();
       if (!text) {
         log('校验失败：任务内容为空');
         send(res, 400, { ok: false, error: '任务内容不能为空' });
@@ -175,6 +178,13 @@ const server = http.createServer(async (req, res) => {
       }
       if (text.length > 500) {
         send(res, 400, { ok: false, error: '任务内容不能超过 500 个字' });
+        return;
+      }
+      // Day 24 补充测试：控制字符（\u0000 等）会让 PG 拒收整个事务 → 500 兜底。
+      // 入口直接拒，别把脏数据带给数据库。（\t\n\r 允许，其余控制字符拒绝）
+      if (/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(text)) {
+        log('校验失败：任务内容含控制字符');
+        send(res, 400, { ok: false, error: '任务内容不能包含特殊控制字符' });
         return;
       }
 
@@ -186,30 +196,27 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // 4. 查重 + 取最大 position：两次查询互不依赖，并行发（代码审查 #7，
-      //    原 4 次串行往返 → 3 次，新增接口耗时立省一段）
-      const [dup, maxRow] = await Promise.all([
-        db.query(`/tasks?select=id&text=eq.${encodeURIComponent(text)}&deleted_at=is.null`),
-        db.query(`/tasks?select=position&order=position.desc&limit=1`),
-      ]);
-      if (dup.length > 0) {
-        log('校验失败：重复提交', text);
-        send(res, 409, { ok: false, error: '这个任务已经存在了' });
-        return;
-      }
-      // 5. 插入 tasks。position = max+1 有并发窗口（两人同时新增会拿到同一个
-      //    position，撞部分唯一索引）——撞了就重读 max 重插，最多 3 次。
+      // 4~5. 查重 + 取 position + 插入，整体重试。
+      //     Day 24 补充测试发现：10 个并发 POST 有 3 个 500——根因是并发下
+      //     并行查询阶段就可能被网关拒（旧代码只重试了 insert，查询炸了没人接），
+      //     且 CloudBase 网关唯一冲突错误码是 DATABASE_23505。
+      //     现在把「读+写」当一整段重试；重试时 position 加随机抖动，
+      //     避免多个失败者第 2 次又读到同一个 max 再次互撞。
       let inserted = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        let position;
-        if (attempt === 1) {
-          position = (maxRow.length > 0 ? maxRow[0].position : 0) + 1;
-        } else {
-          log('position 冲突，重试', `attempt=${attempt}`);
-          const retryMax = await db.query(`/tasks?select=position&order=position.desc&limit=1`);
-          position = (retryMax.length > 0 ? retryMax[0].position : 0) + 1;
-        }
+      for (let attempt = 1; attempt <= 5; attempt++) {
         try {
+          const [dup, maxRow] = await Promise.all([
+            db.query(`/tasks?select=id&text=eq.${encodeURIComponent(text)}&deleted_at=is.null`),
+            db.query(`/tasks?select=position&order=position.desc&limit=1`),
+          ]);
+          if (dup.length > 0) {
+            log('校验失败：重复提交', text);
+            send(res, 409, { ok: false, error: '这个任务已经存在了' });
+            return;
+          }
+          // 抖动：第 2 次起在 max+1 基础上随机 +0~3，把并发的失败者错开
+          const jitter = attempt === 1 ? 0 : Math.floor(Math.random() * 4);
+          const position = (maxRow.length > 0 ? maxRow[0].position : 0) + 1 + jitter;
           inserted = await db.insert(
             'tasks',
             {
@@ -223,9 +230,14 @@ const server = http.createServer(async (req, res) => {
           );
           break; // 插入成功，跳出重试循环
         } catch (e) {
-          const isUniqueConflict = /23505|unique/i.test(e.message);
-          if (isUniqueConflict && attempt < 3) continue; // 撞了索引，换下个 position 再试
-          throw e; // 其他错误照常往上抛
+          // position 撞唯一索引（多人同时新增）或网关瞬时拒绝，都值得重试
+          const retryable = /23505|unique|网关|5\d\d|fetch|ECONN|timeout/i.test(e.message);
+          if (retryable && attempt < 5) {
+            log('并发/瞬时错误，退避重试', `attempt=${attempt}`, e.message.slice(0, 120));
+            await new Promise(r => setTimeout(r, 50 * attempt)); // 线性退避
+            continue;
+          }
+          throw e;
         }
       }
       const newTask = inserted[0];

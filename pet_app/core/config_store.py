@@ -47,13 +47,17 @@ class ConfigStore:
                 loaded = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             loaded = {}
+        # 防御：根或各段必须是 dict（用户手改可能写出数组/字符串/数字）
+        if not isinstance(loaded, dict):
+            loaded = {}
         # 用默认值补齐缺失字段（浅合并到二级）
         merged = json.loads(json.dumps(DEFAULTS))  # deep copy
         for section, values in loaded.items():
             if isinstance(values, dict) and isinstance(merged.get(section), dict):
                 merged[section].update(values)
-            else:
+            elif isinstance(values, dict):
                 merged[section] = values
+            # 非 dict 的段直接忽略，保留默认值
         return merged
 
     def _save(self):

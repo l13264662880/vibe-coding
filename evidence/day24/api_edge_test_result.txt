@@ -1,0 +1,18 @@
+[PASS] A1 纯不可见标题[全角空格] | status=400 任务内容不能为空
+[PASS] A1 纯不可见标题[制表+换行] | status=400 任务内容不能为空
+[PASS] A1 纯不可见标题[零宽空格] | status=400 任务内容不能为空
+[PASS] A1 纯不可见标题[NBSP] | status=400 任务内容不能为空
+[PASS] A2 正好 500 字标题 | status=200
+[PASS] A2 501 字标题 | status=400 任务内容不能超过 500 个字
+[PASS] A3 标题含 \u0000 | status=400 任务内容不能包含特殊控制字符
+[PASS] A4 XSS 标题创建 | status=200
+[PASS] A4 XSS 标题原样存储（前端需 textContent 渲染） | 存储=day24_<img src=x onerror=alert(1)>
+[PASS] A5 reorder[重复 id] | status=409 {"ok":false,"error":"order 列表和现有任务对不上，请刷新后重试"}
+[PASS] A5 reorder[不存在 id] | status=409 {"ok":false,"error":"order 列表和现有任务对不上，请刷新后重试"}
+[PASS] A5 reorder[空数组] | status=400 {"ok":false,"error":"order 必须是非空的任务 id 数组"}
+[PASS] A5 reorder[字符串] | status=400 {"ok":false,"error":"order 必须是非空的任务 id 数组"}
+[PASS] A5 reorder[null 混入] | status=400 {"ok":false,"error":"order 必须是非空的任务 id 数组"}
+[PASS] A6 10 并发 POST | ok=10 position重复=false [93,94,95,96,97,98,99,100,101,102]
+[PASS] A7 测试数据清理 | 残留 0 条
+
+===== 汇总：0 个 FAIL =====

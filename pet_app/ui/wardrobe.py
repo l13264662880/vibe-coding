@@ -49,7 +49,8 @@ class Wardrobe:
     def __init__(self, config):
         self._config = config
         self.themes = _load_themes()
-        self.parts = dict(config.get("pet", "parts") or {})  # slot -> part_id
+        raw_parts = config.get("pet", "parts")
+        self.parts = dict(raw_parts) if isinstance(raw_parts, dict) else {}
         self.theme = config.get("pet", "theme")
         self.mode = config.get("pet", "outfit_mode") or "theme"
         self.last_missing_parts = []   # 最近一次 apply_theme 中素材缺失的部位
