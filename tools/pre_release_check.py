@@ -163,11 +163,23 @@ def check_functions_syntax():
            "失败: " + ",".join(bad) if bad else "node --check 全过")
 
 
+def _pet_python():
+    """桌宠冒烟测试优先用装了 PySide6 的 venv python；找不到则回退当前解释器。"""
+    candidates = [
+        os.path.expanduser("~/.workbuddy/binaries/python/envs/default/Scripts/python.exe"),
+        os.path.expanduser("~/.workbuddy/binaries/python/envs/default/bin/python"),
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return sys.executable
+
+
 def check_pet_smoke():
     """桌宠冒烟测试必须通过（offscreen，无需显示器）。"""
     env = dict(os.environ, QT_QPA_PLATFORM="offscreen")
     r = subprocess.run(
-        [sys.executable, os.path.join("pet_app", "tools", "smoke_test.py")],
+        [_pet_python(), os.path.join("pet_app", "tools", "smoke_test.py")],
         cwd=REPO, capture_output=True, text=True, env=env,
     )
     ok = r.returncode == 0 and "SMOKE OK" in r.stdout

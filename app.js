@@ -846,7 +846,9 @@
     const li = event.target.closest('.task');
     clearDropMarks();
 
-    if (li && li.dataset.id === dragId) return; // 拖到自己身上，不算落点
+    if (li && toTaskId(li.dataset.id) === dragId) return; // 拖到自己身上，不算落点
+    // 注意：dataset.id 是字符串、dragId 已被 toTaskId 转成数字，
+    // 直接 === 会永远不相等——Day 27 自拖自放 bug 的根因，必须过 toTaskId 再比。
 
     if (li && !li.classList.contains('is-done')) {
       // 鼠标在目标行的上半 → 插到它前面；下半 → 插到它后面
@@ -859,7 +861,7 @@
 
     // 落在已完成区、或列表的空白处 → 当作「放到未完成区的末尾」
     const last = lastOpenRow();
-    if (last && last.dataset.id !== dragId) {
+    if (last && toTaskId(last.dataset.id) !== dragId) {
       last.classList.add('drop-after');
       dropTarget = { id: last.dataset.id, after: true };
     }
@@ -907,6 +909,10 @@
   function applyDrop(id, target) {
     const from = tasks.findIndex((t) => t.id === id);
     if (from === -1) return;
+    // 兜底：落在自己身上就原地不动。正常路径下 dragover 已拦截自拖，
+    // 但这里再挡一道——否则「先摘出自己 → findIndex 找不到自己 → 插到末尾」
+    // 会把任务 silently 送到列表底（Day 27 修复的 bug 路径）。
+    if (toTaskId(target.id) === id) return;
 
     const [moving] = tasks.splice(from, 1); // 先把它从原位置拿出来
 

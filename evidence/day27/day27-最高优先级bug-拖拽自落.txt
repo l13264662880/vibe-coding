@@ -1,0 +1,46 @@
+Day 27 最高优先级 Bug：拖拽「松手落回自己身上」会把任务 silently 送到列表末尾
+====================================================================
+（复现→定位→修复→验证 全记录，2026-10-13）
+
+一、怎么发现的
+- 降级自试补测试用任务卡第 5 步（拖拽排序）：tools/probe_drag_native.js
+  用真实鼠标手势（CDP Input.dispatchMouseEvent）拖第 1 条到第 2 条——
+  第一次落点选在第 2 行正中心，顺序没变。起初以为是探针局限，
+  用 tools/probe_drag_diag.js 逐落点诊断后抓到实锤：
+  正在被拖的第 1 行自己身上出现了 drop-after 落点标记
+  （事件日志：dragenter@765,651 t=LI.task.is-first.is-dragging.drop-after）。
+  「拖到自己身上不算落点」的防护失效了。
+
+二、根因（app.js，字符串 vs 数字严格相等）
+- dragstart 里 dragId = toTaskId(li.dataset.id)  → "1" 被转成数字 1
+- dragover 自查：li.dataset.id === dragId          → "1" === 1 → false（永远不相等！）
+  同一错误还有一处：空白区兜底 last.dataset.id !== dragId
+- 后果链：拖拽中指针划过自己被拖行 → 该行被标记为落点、dropTarget 指向自己；
+  松手落回自己身上 → applyDrop 先 splice 摘出自己 → findIndex 找不到自己
+  → to = tasks.length → 任务直接飞到未完成区末尾，并静默同步上云。
+- 触发门槛极低：抓住一行、改主意、放回原处（或没拖够远）——优先级顺序
+  就被悄悄打乱，而「位置即优先级」正是这个产品的核心价值。
+
+三、复现（修复前，tools/repro_self_drop.js，合成事件直打处理器）
+- 云端初始: [1,8,2,4,3,7,14,5(done)]
+- 自拖自放后: [8,2,4,3,7,14,1,5]  ← 任务 1 从第 1 位飞到第 7 位（done 之前）
+- 同时 tools/probe_drag_diag.js 的真实鼠标手势日志佐证：
+  dragover/drop 事件真实到达 el.list 上的处理器（浏览器链路无问题）。
+
+四、修复（app.js 三处）
+1. dragover 自查：toTaskId(li.dataset.id) === dragId
+2. 空白区兜底：toTaskId(last.dataset.id) !== dragId
+3. applyDrop 兜底：toTaskId(target.id) === id 时直接 return（原地不动），
+   并注释说明「先摘出自己 → 找不到自己 → 插末尾」的 bug 路径。
+
+五、验证（修复后，tools/verify_self_drop_fix.js，线上实测）
+- 已部署：tcb hosting deploy app.js（CDN 无缓存核实线上已含修复）
+- A 自拖自放原地不动：PASS（顺序不变，不再飞末尾）
+- B 正常换序（拖到第2条下半）：PASS（前两条换序，无回归）
+- C 空白区落放：PASS（落到未完成区末尾，设计行为保留）
+- 收尾云端顺序与初始一致 [1,8,2,4,3,7,14,5] ✅
+
+六、附带发现（非本次修复，记录备查）
+- 直连 page 靶机的 CDP WebSocket 在本机无响应，需走 browser 端点 +
+  Target.attachToTarget(flatten)（tools/dbg_cdp.js 验证）。
+- 诊断期间顺序被打乱，已用 reorder API 复位；最终状态见上。
