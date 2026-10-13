@@ -20,3 +20,5 @@ Thumbs.db
 .vscode/
 .idea/
 .cloudbase-staging/
+_stage_*
+.cloudbase-backup/

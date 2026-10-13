@@ -1,0 +1,52 @@
+CloudBase CLI 3.8.6
+Try the tcb ai command to start your AI full-stack development experience
+- Loading data...
+- Preparing upload...
+[uploadFiles] 准备上传 8 个文件
+[uploadFiles] 智能混合模式：先并行快速上传，失败文件自动串行重试
+[parallel-upload] 正在上传第 1 批次 (文件 1-8/8)
+[parallel-upload] 第 1 批次上传成功
+[parallel-upload] 全部 8 个文件并行上传成功
+[uploadFiles] 全部完成！共处理 8 个文件
+[uploadFiles] 准备上传 1 个文件
+[uploadFiles] 智能混合模式：先并行快速上传，失败文件自动串行重试
+[parallel-upload] 正在上传第 1 批次 (文件 1-1/1)
+[parallel-upload] 第 1 批次上传成功
+[parallel-upload] 全部 1 个文件并行上传成功
+[uploadFiles] 全部完成！共处理 1 个文件
+✔ File upload completed
+√ 
+Deployment completed https://yuanjian-d5gdhcntg91022662-1500297151.tcloudbaseapp.com/E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/
+√ Post-publish consistency verification completed
+i Pre-publish backup created: .cloudbase-backup/1791883703456/
+i Backups are not cleaned up automatically. After confirming the publish is correct, you can clean them up manually
+√ Total files: 9
+√ Successfully uploaded 9 file(s)
+[90m┌────────[39m[90m┬────────────────────────────────────────────────────────────────────────────────┐[39m
+[90m│[39m[33m Status [39m[90m│[39m[33m                                      File                                      [39m[90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m   E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/mood.js    [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m   E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/theme.js   [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m    E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/app.js    [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/mock-data.js [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m   E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/parse.js   [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m  E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/bamboo.svg  [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/pomodoro.js  [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m  E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/style.css   [90m│[39m
+[90m├────────[39m[90m┼────────────────────────────────────────────────────────────────────────────────┤[39m
+[90m│[39m   √    [90m│[39m  E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/index.html  [90m│[39m
+[90m└────────[39m[90m┴────────────────────────────────────────────────────────────────────────────────┘[39m
+i 
+i Next step:
+i   • Verify file path: tcb hosting list E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/
+i   • Upload more directories: tcb hosting deploy <localPath> <cloudPath>
+i   • Visit website: https://yuanjian-d5gdhcntg91022662-1500297151.tcloudbaseapp.com/E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/
+i   CDN cache tip: If the page is not updated, verify with curl -H "Cache-Control: no-cache" https://yuanjian-d5gdhcntg91022662-1500297151.tcloudbaseapp.com/E:/LenovoSoftstore/Install/WorkBuddy/resources/vendor/PortableGit/ or an incognito browser. CDN usually refreshes in a few minutes
+i   Need version management? Use tcb app deploy for cloud builds, rollbacks, and service name management

@@ -1,0 +1,8 @@
+Day 26 回滚演练记录（2026-10-13）
+================================
+① v1.0 发布（首次，--safe --verify）：11s → verify 走 CDN 撞缓存延迟，误报 missing，自动回滚 → 站点 404（真实事故）
+② 事故恢复（重发 v1.0，去掉 --verify）：8s + CDN 30s → 首页 200，app.js 与 v1.0 一致
+③ 计划内回滚（部署 51efc80 旧版）：8s + CDN 25s → 首页 200，app.js 确认旧版
+④ 恢复 v1.0：8s + CDN 25s → 首页 200，哈希一致
+端到端（404 发现 → 200 恢复）：约 1 分钟
+附带收获：Git Bash 下 hosting deploy 的 "/" 参数被 MSYS 转换（误传到 PortableGit 路径，已用 hosting delete --dir 清理）；检查器顺手抓到 _stage_* 暂存目录带令牌（已移出仓库+gitignore）

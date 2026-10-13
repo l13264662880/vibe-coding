@@ -1,0 +1,24 @@
+CloudBase CLI 3.8.6
+Try the tcb ai command to start your AI full-stack development experience
+- Loading data...
+- Preparing upload...
+[uploadFiles] 准备上传 8 个文件
+[uploadFiles] 智能混合模式：先并行快速上传，失败文件自动串行重试
+[parallel-upload] 正在上传第 1 批次 (文件 1-8/8)
+[parallel-upload] 第 1 批次上传成功
+[parallel-upload] 全部 8 个文件并行上传成功
+[uploadFiles] 全部完成！共处理 8 个文件
+[uploadFiles] 准备上传 1 个文件
+[uploadFiles] 智能混合模式：先并行快速上传，失败文件自动串行重试
+[parallel-upload] 正在上传第 1 批次 (文件 1-1/1)
+[parallel-upload] 第 1 批次上传成功
+[parallel-upload] 全部 1 个文件并行上传成功
+[uploadFiles] 全部完成！共处理 1 个文件
+✖ File upload failed!
+× Static file upload failed: 一致性发布失败，已自动回滚，备份保留于 .cloudbase-backup/1791883809215/，确认无误后可调用 cleanupBackup 清理：一致性校验失败：missing=/app.js,/bamboo.svg,/index.html,/mock-data.js,/mood.js,/parse.js,/pomodoro.js,/style.css,/theme.js; mismatched=[]
+
+Solution:
+  - Check that the network connection is stable
+  - If using a proxy, ensure its idle timeout is long enough (recommended: > 5 minutes)
+  - Try uploading a single file first: tcb hosting deploy index.html
+  - Check whether the upload directory contains too many files; upload in batches if needed
