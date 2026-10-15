@@ -40,6 +40,7 @@
     filterTabs: document.getElementById('filterTabs'),
     filterSearch: document.getElementById('filterSearch'),
     filterCount: document.getElementById('filterCount'),
+    statsLine: document.getElementById('statsLine'), // Day 28 余力加练：完成率统计
   };
 
   /* 任务队列。数组的顺序就是位置，位置就是优先级。 */
@@ -160,6 +161,11 @@
   }
 
   function loadFromSource() {
+    // 演示态优先于数据源：地址栏带 ?scenario=empty|error|loading 时强制走 mock。
+    // Day 17 接真实 api 后，这里只判了 DATA_SOURCE，导致四种页面状态的演示
+    // 静默失效（带参数也永远返回真实数据）——Day 28 结营验收 J12 测空态时
+    // 发现并修复。正常访问（无参数）行为不变。
+    if (demoScenario()) return window.MockData.loadTasks();
     if (DATA_SOURCE === 'api') {
       // 调 /api/tasks 读真实数据；字段对齐前端任务对象：
       //   接口返回 {ok, data:[{id,text,position,done,due,estimate}]}
@@ -318,6 +324,7 @@
     // 空状态（区分「本来没任务」和「筛选无结果」）+ 数量提示
     renderEmpty(ordered.length, filtered.length);
     renderCount(ordered.length, filtered.length);
+    renderStats(ordered.length);
 
     // 编辑态：重新渲染后把焦点放回输入框，光标停在末尾
     if (editingId) {
@@ -356,6 +363,16 @@
     } else {
       el.filterCount.hidden = true;
     }
+  }
+
+  /* 完成率统计（Day 28 余力加练）：一行小字常驻显示「共 N 条 · 已完成 M 条（P%）」。
+     只读展示，不参与任何交互；列表为空时隐藏。 */
+  function renderStats(total) {
+    if (total === 0) { el.statsLine.hidden = true; return; }
+    const done = tasks.filter((t) => t.done).length;
+    const pct = Math.round((done / total) * 100);
+    el.statsLine.textContent = `共 ${total} 条 · 已完成 ${done} 条（${pct}%）`;
+    el.statsLine.hidden = false;
   }
 
   function renderFocus() {

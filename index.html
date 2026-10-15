@@ -130,6 +130,8 @@
 
       <!-- 智能排序：工具按截止时间给初始顺序当起点，用户仍可拖拽微调（预排序，不代排） -->
       <div class="sort-bar">
+        <!-- 完成率统计（Day 28 余力加练）：只读小字，内容由 app.js 的 renderStats 更新 -->
+        <span class="stats-line" id="statsLine" hidden></span>
         <button type="button" class="sort-btn" id="sortBtn">按截止时间排序</button>
       </div>
 

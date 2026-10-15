@@ -322,7 +322,17 @@ button:focus-visible {
   margin: -8px 0 var(--space-lg);
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
 }
+/* 完成率统计（Day 28 余力加练）：与 .filter-count 同风格的小字，占排序行左侧 */
+.stats-line {
+  margin-right: auto;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--text-soft);
+}
+.stats-line[hidden] { display: none; }
 .sort-btn {
   min-height: 36px;
   padding: 6px 16px;
